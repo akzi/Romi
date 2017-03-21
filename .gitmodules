@@ -1,0 +1,6 @@
+[submodule "deps/zeromq4-x"]
+	path = deps/zeromq4-x
+	url = https://github.com/zeromq/zeromq4-x.git
+[submodule "deps/thread-pool-cpp"]
+	path = deps/thread-pool-cpp
+	url = https://github.com/inkooboo/thread-pool-cpp.git

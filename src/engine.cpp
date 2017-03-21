@@ -8,16 +8,72 @@ namespace romi
 	}
 	engine::~engine()
 	{
-
+		if (is_start_)
+			stop();
 	}
-	void engine::send(std::shared_ptr<message_base> &&msg)
+
+	actor_id engine::gen_actor_id()
+	{
+		return next_actor_id++;
+	}
+
+	void engine::send(message_base::ptr &&msg)
 	{
 		if (const auto _actor = msg->to_.actor_.lock())
 		{
+			assert(msg->from_.engine_id_ == engine_id_);
 			if (!_actor->receive_msg(std::move(msg)))
 			{
-
+				dispatcher_pool_.dispatch(_actor);
 			}
 		}
+		else
+		{
+			send_to_net(std::move(msg));
+		}
 	}
+
+
+	void engine::start()
+	{
+		assert(!is_start_);
+		is_start_ = true;
+		dispatcher_pool_.start();
+	}
+
+
+	void engine::stop()
+	{
+		assert(is_start_);
+		is_start_ = false;
+		dispatcher_pool_.stop();
+	}
+
+	void engine::init_actor(actor::ptr &_actor)
+	{
+		_actor->send_msg_ = [this](auto &&msg) {
+			send(std::move(msg));
+		};
+		_actor->addr_.actor_ = _actor;
+		_actor->addr_.actor_id_ = gen_actor_id();
+		_actor->addr_.engine_id_ = engine_id_;
+		send(make_message(_actor->addr_, _actor->addr_, sys::actor_init()));
+		add_actor(_actor);
+	}
+
+
+	void engine::add_actor(actor::ptr &_actor)
+	{
+		std::lock_guard<spinlock> lg(actors_.lock_);
+		actors_.actors_.emplace(_actor->addr_, _actor);
+	}
+
+	void engine::send_to_net(message_base::ptr &&msg)
+	{
+
+	}
+
+
+	
+
 }

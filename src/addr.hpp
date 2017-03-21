@@ -2,6 +2,7 @@
 namespace romi
 {
 	using engine_id = uint64_t;
+	using actor_id = uint64_t;
 	struct addr
 	{
 		struct less
@@ -13,7 +14,7 @@ namespace romi
 			}
 		};
 		engine_id  engine_id_;
-		uint64_t actor_id_;
+		actor_id actor_id_;
 		std::weak_ptr<class actor> actor_;
 	};
 }

@@ -2,13 +2,12 @@
 namespace romi
 {
 
-#define DefineActorMsg(Type) \
-template<> \
-struct message_traits<Type> \
-{ \
-	enum { value = 1 };\
-	static constexpr char *_$_type = "actor::"#Type;\
- }
+#define ROMI_DEFINE_MSG(Sym, Message) \
+	template<>  struct message_traits<Message> \
+	{  enum { value = 1 }; static constexpr char *_$_type = ""#Sym#Message;}
+
+#define ROMI_DEFINE_ACTOR_MSG(Message) ROMI_DEFINE_MSG(., Message);
+#define ROMI_DEFINE_SYS_MSG(Message) ROMI_DEFINE_MSG(?, Message);
 
 	template<typename T>
 	struct message_traits
@@ -16,7 +15,7 @@ struct message_traits<Type> \
 		enum { value = 0 };
 	};
 
-	DefineActorMsg(std::string);
+	ROMI_DEFINE_ACTOR_MSG(std::string);
 
 	template<typename T>
 	inline constexpr std::enable_if_t<message_traits<T>::value, const char *>
@@ -39,18 +38,18 @@ struct message_traits<Type> \
 		addr from_;
 		addr to_;
 		std::string type_;
-		virtual ~message_base(){}
+		virtual ~message_base() {}
 		template<typename T> T* get()
 		{
 			return static_cast<T*>(get_impl(typeid(std::decay_t<T>)));
 		}
 	private:
-		virtual void* get_impl(const std::type_info& info){return nullptr; }
+		virtual void* get_impl(const std::type_info& info) { return nullptr; }
 	};
 
 
-	template<typename T> 
-	class message : public message_base 
+	template<typename T>
+	class message : public message_base
 	{
 		T value_;
 	public:
@@ -62,7 +61,7 @@ struct message_traits<Type> \
 			type_ = get_message_type<T>();
 		}
 
-		virtual void* get_impl(const std::type_info& info) 
+		virtual void* get_impl(const std::type_info& info)
 		{
 			if (typeid(T) == info)
 				return &value_;
@@ -70,10 +69,17 @@ struct message_traits<Type> \
 				return nullptr;
 		}
 	};
+	namespace sys
+	{
+		struct actor_init { };
+		struct engine_offline { };
+	}
+
+	ROMI_DEFINE_SYS_MSG(sys::actor_init);
 
 	template<typename T>
-	inline auto make_message(const addr &from, const addr &to, T &&val)
+	inline  std::shared_ptr<message_base> make_message(const addr &from, const addr &to, T &&val)
 	{
-		return std::shared_ptr<message_base> (std::make_shared<message<T>>(from, to, std::forward<T>(val)));
+		return std::make_shared<message<T>>(from, to, std::forward<T>(val));
 	}
 }

@@ -11,6 +11,8 @@
 
 #include "function_traits.hpp"
 #include "config.h"
+#include "ypipe.hpp"
+#include "mpsc_bounded_queue.hpp"
 #include "addr.hpp"
 #include "spinlock.h"
 #include "message.hpp"
@@ -18,3 +20,4 @@
 #include "dispatcher.h"
 #include "dispatcher_pool.h"
 #include "engine.h"
+#include "templates.hpp"

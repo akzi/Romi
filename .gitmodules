@@ -4,3 +4,6 @@
 [submodule "deps/thread-pool-cpp"]
 	path = deps/thread-pool-cpp
 	url = https://github.com/inkooboo/thread-pool-cpp.git
+[submodule "deps/protobuf"]
+	path = deps/protobuf
+	url = https://github.com/google/protobuf.git

@@ -8,22 +8,39 @@ namespace romi
 		~engine();
 
 		template<typename Actor, typename ...Args>
-		std::enable_if_t<std::is_base_of<actor, Actor>::value, addr>
-			spawn(Args &&...args)
-		{
+		inline std::enable_if_t<std::is_base_of<actor, Actor>::value, addr> 
+			spawn(Args &&...args);
 
-		}
+		template<typename T>
+		std::enable_if_t<message_traits<T>::value> 
+			send(const addr &from, const addr &to, T &&msg);
 
+		void start();
+
+		void stop();
 	private:
-		void send(std::shared_ptr<message_base> &&msg);
+		actor_id gen_actor_id();
+
+		void send(message_base::ptr &&msg);
+
+		void send_to_net(message_base::ptr &&msg);
+
+		void init_actor(actor::ptr &_actor);
+
+		void add_actor(actor::ptr &_actor);
 
 		struct actors
 		{
-			std::mutex mutex_;
+			spinlock lock_;
 			std::map<addr, actor::ptr, addr::less> actors_;
-		};
+		} actors_;
 
-		engine_id id_;
-		actors actors_;
+		std::atomic_bool is_start_{false};
+		std::atomic<actor_id> next_actor_id { 1 };
+		engine_id engine_id_ = 0;
+		dispatcher_pool dispatcher_pool_;
 	};
+
+
+
 }

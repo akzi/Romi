@@ -119,6 +119,7 @@
     <ClCompile Include="..\..\..\src\engine.cpp" />
     <ClCompile Include="..\..\..\src\romi.cpp" />
     <ClCompile Include="..\..\..\src\dispatcher.cpp" />
+    <ClCompile Include="..\..\..\src\spinlock.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\actor.h" />
@@ -127,10 +128,14 @@
     <ClInclude Include="..\..\..\src\engine.h" />
     <ClInclude Include="..\..\..\src\function_traits.hpp" />
     <ClInclude Include="..\..\..\src\message.hpp" />
+    <ClInclude Include="..\..\..\src\mpsc_bounded_queue.hpp" />
     <ClInclude Include="..\..\..\src\romi.hpp" />
     <ClInclude Include="..\..\..\src\dispatcher.h" />
     <ClInclude Include="..\..\..\src\dispatcher_pool.h" />
     <ClInclude Include="..\..\..\src\spinlock.h" />
+    <ClInclude Include="..\..\..\src\templates.hpp" />
+    <ClInclude Include="..\..\..\src\ypipe.hpp" />
+    <ClInclude Include="..\..\..\src\yqueue.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

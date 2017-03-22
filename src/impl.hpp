@@ -30,7 +30,7 @@ namespace romi
 	inline  std::shared_ptr<romi::message_base>
 		make_message(const addr &from, const addr &to, T &&val)
 	{
-		return std::make_shared<message<T>>(from, to, std::forward<T>(val));
+		return std::make_shared<message<std::decay_t<T>>>(from, to, std::forward<T>(val));
 	}
 
 	template<typename T>

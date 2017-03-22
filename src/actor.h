@@ -26,13 +26,17 @@ namespace romi
 		void add_watcher(const event::add_engine_watcher& );
 		void del_watcher(const event::del_engine_watcher& );
 
-
+		void close();
 	private:
 		virtual void init();
 
 		bool dispatch_msg();
 
 		void dispatch_msg(const std::shared_ptr<message_base> &msg);
+
+		bool apply_msg(const std::shared_ptr<message_base> &msg);
+
+		void default_msg_process(const std::shared_ptr<message_base> &msg);
 
 		void timer_expire(timer_id id);
 
@@ -56,6 +60,19 @@ namespace romi
 		timer_id timer_id_ = 0;
 		std::map<timer_id, std::pair<timer_id, timer_handle>> timer_handles_;
 
+
+		//Observer 
+		std::set<addr> observers_;
+
+		//watcher
+		std::set<engine_id> engine_watchers_;
+		std::set<addr, addr_less> actors_watchers_;
+
+		std::function<void(addr, event::add_actor_watcher)> add_actor_watcher_;
+		std::function<void(addr, event::del_actor_watcher)> del_actor_watcher_;
+
+		std::function<void(addr, event::add_engine_watcher)> add_engine_watcher_;
+		std::function<void(addr, event::del_engine_watcher)> del_engine_watcher_;
 
 	};
 }

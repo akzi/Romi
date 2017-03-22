@@ -29,18 +29,35 @@ namespace romi
 	}
 	void actor::add_watcher(const event::add_actor_watcher &watcher)
 	{
-		if (watcher.actor_ == addr_)
+		if (watcher.actor_ == addr_ ||
+			actors_watchers_.find(watcher.actor_) != actors_watchers_.end())
 			return;
+		add_actor_watcher_(addr_, watcher);
 	}
-	void actor::add_watcher(const event::add_engine_watcher&)
+	void actor::add_watcher(const event::add_engine_watcher& watcher)
 	{
-
+		if (watcher.engid_id_ == addr_.engine_id_||
+			engine_watchers_.find(watcher.engid_id_) == engine_watchers_.end())
+			return;
+		add_engine_watcher_(addr_, watcher);
 	}
-	void actor::del_watcher(const event::del_actor_watcher&)
+	void actor::del_watcher(const event::del_actor_watcher& watcher)
 	{
-
+		if (watcher.actor_ == addr_ ||
+			actors_watchers_.find(watcher.actor_) == actors_watchers_.end())
+			return;
+		actors_watchers_.erase(watcher.actor_);
+		del_actor_watcher_(addr_, watcher);
 	}
-	void actor::del_watcher(const event::del_engine_watcher&)
+	void actor::del_watcher(const event::del_engine_watcher& watcher)
+	{
+		if (watcher.engid_id_ == addr_.engine_id_ ||
+			engine_watchers_.find(watcher.engid_id_) == engine_watchers_.end())
+			return;
+		engine_watchers_.erase(watcher.engid_id_);
+		del_engine_watcher_(addr_, watcher);
+	}
+	void actor::close()
 	{
 
 	}
@@ -61,6 +78,27 @@ namespace romi
 
 	void actor::dispatch_msg(const std::shared_ptr<message_base> &msg)
 	{
+		if (apply_msg(msg))
+		{
+			return;
+		}
+		else if(msg->get<sys::actor_init>())
+		{
+			init();
+		}
+		else if(const auto ptr = msg->get<sys::timer_expire>())
+		{
+			timer_expire(ptr->id_);
+		}
+		else
+		{
+			default_msg_process(msg);
+		}
+	}
+
+
+	bool actor::apply_msg(const std::shared_ptr<message_base> &msg)
+	{
 		auto &func = msg_handles_[msg->type_];
 		if (func)
 		{
@@ -76,22 +114,16 @@ namespace romi
 			{
 				std::cout << "catch a exception" << std::endl;
 			}
-			return;
+			return true;
 		}
-		else if(msg->get<sys::actor_init>())
-		{
-			init();
-		}
-		else if(const auto ptr = msg->get<sys::timer_expire>())
-		{
-			timer_expire(ptr->id_);
-		}
-		else
-		{
-			std::cout << "Can't find message process handle : " <<
-				msg->type_.c_str() << std::endl;
-		}
-		
+		return false;
+	}
+
+
+	void actor::default_msg_process(const std::shared_ptr<message_base> &msg)
+	{
+		std::cout << "Can't find message process handle : " <<
+			msg->type_.c_str() << std::endl;
 	}
 
 	void actor::timer_expire(timer_id id)

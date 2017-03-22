@@ -25,6 +25,8 @@ namespace romi
 
 		void send_to_net(message_base::ptr &&msg);
 
+		void add_remote_watcher(addr _actor, event::add_actor_watcher watcher);
+
 		void init_actor(actor::ptr &_actor);
 
 		void add_actor(actor::ptr &_actor);

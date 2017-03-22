@@ -12,7 +12,7 @@ namespace romi
 
 		void stop();
 
-		void dispatch(std::weak_ptr<actor> actor_);
+		void dispatch(std::weak_ptr<actor> &&actor_);
 
 	private:
 		bool steal_actor(std::weak_ptr<actor> &_actor);

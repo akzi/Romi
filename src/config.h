@@ -8,9 +8,9 @@ namespace romi
 		msg_queue_granularity = 128,
 
 		//max actor size 
-		dispatcher_queue_size = 1024,
+		dispatcher_queue_size = 1024*16,
 
 		//0 for  hardware_concurrency
-		dispatcher_pool_size = 1
+		dispatcher_pool_size = 0
 	};
 }

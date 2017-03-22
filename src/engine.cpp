@@ -69,12 +69,16 @@ namespace romi
 
 		_actor->cancel_timer_ = [this](timer_id id) { timer_.cancel_timer(id); };
 
-		_actor->add_actor_watcher_ = [this](addr from, event::add_actor_watcher watcher) {
-			if (watcher.actor_.engine_id_ == engine_id_)
-				return send(make_message(from, watcher.actor_, watcher));
-			add_remote_watcher(from, watcher);
+		_actor->add_watcher_ = [this](addr from, addr _actor) {
+			if (_actor.engine_id_ == engine_id_)
+				return send(make_message(from, _actor, sys::add_watcher {from}));
+			add_remote_watcher(from, _actor);
 		};
+		_actor->cancel_watch_ = [this](addr from, addr _actor) {
+			if (_actor.engine_id_ == engine_id_)
+				return send(make_message(from, _actor, sys::del_watcher {from}));
 
+		};
 		send(make_message(_actor->addr_, _actor->addr_, sys::actor_init()));
 		add_actor(_actor);
 	}
@@ -90,9 +94,30 @@ namespace romi
 
 	}
 
-	void engine::add_remote_watcher(addr _actor, event::add_actor_watcher watcher)
+	void engine::add_remote_watcher(addr from, addr _actor)
 	{
+		add_engine_watcher(from, _actor);
+		send_to_net(make_message(from, _actor, sys::add_watcher {from}));
+	}
 
+
+	void engine::del_remote_watcher(addr from, addr _actor)
+	{
+		del_engine_watcher(from, _actor);
+		send_to_net(make_message(from, _actor, sys::del_watcher {from}));
+	}
+
+	void engine::add_engine_watcher(addr from, addr _actor)
+	{
+		std::lock_guard<spinlock> lock_guard_(engine_watcher_.locker_);
+		engine_watcher_.watchers_[_actor.engine_id_].insert(from);
+	}
+
+
+	void engine::del_engine_watcher(addr from, addr _actor)
+	{
+		std::lock_guard<spinlock> lock_guard_(engine_watcher_.locker_);
+		engine_watcher_.watchers_[_actor.engine_id_].erase(from);
 	}
 
 }

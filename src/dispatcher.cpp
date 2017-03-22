@@ -29,7 +29,7 @@ namespace romi
 		thread_.join();
 	}
 
-	void dispatcher::dispatch(std::weak_ptr<actor> actor_)
+	void dispatcher::dispatch(std::weak_ptr<actor> &&actor_)
 	{
 		if (!queue_.push(std::move(actor_)))
 			throw std::runtime_error("queue full");
@@ -52,7 +52,7 @@ namespace romi
 				{
 					if (_actor->dispatch_msg())
 					{
-						dispatch(item);
+						dispatch(std::move(item));
 					}
 				}
 			}
@@ -66,7 +66,7 @@ namespace romi
 
 	void dispatcher::sleep()
 	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		//std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 
 }

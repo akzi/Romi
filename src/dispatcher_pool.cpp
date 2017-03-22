@@ -40,9 +40,17 @@ namespace romi
 		is_start_ = false;
 	}
 
-	void dispatcher_pool::dispatch(std::weak_ptr<actor> actor_)
+	void dispatcher_pool::dispatch(std::weak_ptr<actor> &&actor_)
 	{
-		dispatchers_[++dispatch_index_% dispatchers_.size()]->dispatch(actor_);
+		try
+		{
+			dispatchers_[++dispatch_index_% dispatchers_.size()]->dispatch(std::move(actor_));
+			return;
+		}
+		catch (const std::exception& e)
+		{
+			std::cout << e.what();
+		}
 	}
 
 	bool dispatcher_pool::steal_actor(std::weak_ptr<actor> &_actor)

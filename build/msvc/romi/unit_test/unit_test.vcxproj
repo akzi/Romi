@@ -115,6 +115,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\tests\actor_receivce.cpp" />
+    <ClCompile Include="..\..\..\..\tests\ypipe_test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\deps\zeromq4-x\builds\msvc\libzmq\libzmq11.vcxproj">

@@ -20,15 +20,14 @@ namespace romi
 
 		void cancel_timer(timer_id id);
 
-		void add_watcher(const event::add_actor_watcher& );
-		void del_watcher(const event::del_actor_watcher& );
-
-		void add_watcher(const event::add_engine_watcher& );
-		void del_watcher(const event::del_engine_watcher& );
-
+		void watch(addr actor_);
+		void cancel_watch(addr actor_);
+		
 		void close();
 	private:
 		virtual void init();
+
+		void init_msg_process_handle();
 
 		bool dispatch_msg();
 
@@ -48,11 +47,14 @@ namespace romi
 		friend class engine;
 		friend class dispatcher;
 
+		using msg_process_handle = std::function<bool(const message_base::ptr& )>;
 		addr addr_;
 		//msg
 		spinlock lock_;
+		
 		ypipe<std::shared_ptr<message_base>> msg_queue_;		
-		std::map<std::string, std::function<void(message_base::ptr)>> msg_handles_;
+		std::map<std::string, std::function<void(const message_base::ptr&)>> msg_handles_;
+		std::vector<msg_process_handle> default_msg_process_handles_;
 		std::function<void(message_base::ptr)> send_msg_;
 		//timer
 		std::function<timer_id(addr, std::size_t, timer_id)> set_timer_;
@@ -62,17 +64,13 @@ namespace romi
 
 
 		//Observer 
-		std::set<addr> observers_;
+		std::set<addr, addr_less> observers_;
 
 		//watcher
-		std::set<engine_id> engine_watchers_;
 		std::set<addr, addr_less> actors_watchers_;
 
-		std::function<void(addr, event::add_actor_watcher)> add_actor_watcher_;
-		std::function<void(addr, event::del_actor_watcher)> del_actor_watcher_;
-
-		std::function<void(addr, event::add_engine_watcher)> add_engine_watcher_;
-		std::function<void(addr, event::del_engine_watcher)> del_engine_watcher_;
+		std::function<void(addr, addr)> add_watcher_;
+		std::function<void(addr, addr)> cancel_watch_;
 
 	};
 }

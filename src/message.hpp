@@ -67,18 +67,14 @@ namespace romi
 	ROMI_DEFINE_SYS_MSG(sys::timer_expire);
 
 	//event
-	namespace event
+	namespace sys
 	{
-		struct add_actor_watcher { addr actor_; };
-		struct del_actor_watcher { addr actor_; };
-		struct add_engine_watcher { engine_id engid_id_; };
-		struct del_engine_watcher { engine_id engid_id_; };
+		struct add_watcher { addr actor_; };
+		struct del_watcher { addr actor_; };
 	}
 
-	ROMI_DEFINE_EVENT_MSG(event::add_actor_watcher);
-	ROMI_DEFINE_EVENT_MSG(event::del_actor_watcher);
-	ROMI_DEFINE_EVENT_MSG(event::add_engine_watcher);
-	ROMI_DEFINE_EVENT_MSG(event::del_engine_watcher);
+	ROMI_DEFINE_EVENT_MSG(sys::add_watcher);
+	ROMI_DEFINE_EVENT_MSG(sys::del_watcher);
 
 	template<typename T>
 	std::shared_ptr<message_base> 

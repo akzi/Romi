@@ -1,6 +1,47 @@
 #pragma once
 namespace romi
 {
+	//addr
+	inline bool operator == (const addr &left, const addr &right)
+	{
+		return left.engine_id_ == right.engine_id_ &&
+			left.actor_id_ == right.actor_id_;
+	}
+
+	//message_base
+	template<typename T>
+	inline T* romi::message_base::get()
+	{
+		return static_cast<T*>(get_impl(typeid(std::decay_t<T>)));
+	}
+
+
+	//message
+	template<typename T>
+	inline void* romi::message<T>::get_impl(const std::type_info& info)
+	{
+		if (typeid(T) == info)
+			return &value_;
+		else
+			return nullptr;
+	}
+
+	template<typename T>
+	inline  std::shared_ptr<romi::message_base>
+		make_message(const addr &from, const addr &to, T &&val)
+	{
+		return std::make_shared<message<T>>(from, to, std::forward<T>(val));
+	}
+
+	template<typename T>
+	inline romi::message<T>::message(const addr &from, const addr &to, T value)
+		: value_(std::move(value))
+	{
+		from_ = from;
+		to_ = to;
+		type_ = get_message_type<T>();
+	}
+
 	//actor
 	template<typename T>
 	inline void actor::send(const addr &to, T &&obj)

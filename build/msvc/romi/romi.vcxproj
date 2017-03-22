@@ -120,6 +120,7 @@
     <ClCompile Include="..\..\..\src\romi.cpp" />
     <ClCompile Include="..\..\..\src\dispatcher.cpp" />
     <ClCompile Include="..\..\..\src\spinlock.cpp" />
+    <ClCompile Include="..\..\..\src\timer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\actor.h" />
@@ -133,7 +134,8 @@
     <ClInclude Include="..\..\..\src\dispatcher.h" />
     <ClInclude Include="..\..\..\src\dispatcher_pool.h" />
     <ClInclude Include="..\..\..\src\spinlock.h" />
-    <ClInclude Include="..\..\..\src\templates.hpp" />
+    <ClInclude Include="..\..\..\src\impl.hpp" />
+    <ClInclude Include="..\..\..\src\timer.hpp" />
     <ClInclude Include="..\..\..\src\ypipe.hpp" />
     <ClInclude Include="..\..\..\src\yqueue.hpp" />
   </ItemGroup>

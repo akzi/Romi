@@ -32,15 +32,13 @@ namespace romi
 		struct actors
 		{
 			spinlock lock_;
-			std::map<addr, actor::ptr, addr::less> actors_;
+			std::map<addr, actor::ptr, addr_less> actors_;
 		} actors_;
 
 		std::atomic_bool is_start_{false};
 		std::atomic<actor_id> next_actor_id { 1 };
 		engine_id engine_id_ = 0;
 		dispatcher_pool dispatcher_pool_;
+		timer timer_;
 	};
-
-
-
 }

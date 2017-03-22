@@ -2,10 +2,6 @@
 
 namespace romi
 {
-	spinlock::spinlock() {}
-
-	spinlock::~spinlock() {}
-
 	void spinlock::unlock()
 	{
 		lock_.clear(std::memory_order_release);

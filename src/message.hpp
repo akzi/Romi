@@ -6,8 +6,9 @@ namespace romi
 	template<>  struct message_traits<Message> \
 	{  enum { value = 1 }; static constexpr char *_$_type = ""#Sym#Message;}
 
-#define ROMI_DEFINE_ACTOR_MSG(Message) ROMI_DEFINE_MSG(., Message);
-#define ROMI_DEFINE_SYS_MSG(Message) ROMI_DEFINE_MSG(?, Message);
+#define ROMI_DEFINE_ACTOR_MSG(Message) ROMI_DEFINE_MSG([A], Message);
+#define ROMI_DEFINE_EVENT_MSG(Message) ROMI_DEFINE_MSG([E], Message);
+#define ROMI_DEFINE_SYS_MSG(Message) ROMI_DEFINE_MSG([S], Message);
 
 	template<typename T>
 	struct message_traits
@@ -39,12 +40,9 @@ namespace romi
 		addr to_;
 		std::string type_;
 		virtual ~message_base() {}
-		template<typename T> T* get()
-		{
-			return static_cast<T*>(get_impl(typeid(std::decay_t<T>)));
-		}
+		template<typename T> T* get();
 	private:
-		virtual void* get_impl(const std::type_info& info) { return nullptr; }
+		virtual void* get_impl(const std::type_info&info) { return nullptr; }
 	};
 
 
@@ -53,33 +51,36 @@ namespace romi
 	{
 		T value_;
 	public:
-		message(const addr &from, const addr &to, T value)
-			: value_(std::move(value))
-		{
-			from_ = from;
-			to_ = to;
-			type_ = get_message_type<T>();
-		}
-
-		virtual void* get_impl(const std::type_info& info)
-		{
-			if (typeid(T) == info)
-				return &value_;
-			else
-				return nullptr;
-		}
+		message(const addr &from, const addr &to, T value);
+		virtual void* get_impl(const std::type_info& info);
 	};
+
+	//sys
 	namespace sys
 	{
 		struct actor_init { };
 		struct engine_offline { };
+		struct timer_expire { timer_id id_; };
 	}
 
 	ROMI_DEFINE_SYS_MSG(sys::actor_init);
+	ROMI_DEFINE_SYS_MSG(sys::timer_expire);
+
+	//event
+	namespace event
+	{
+		struct add_actor_watcher { addr actor_; };
+		struct del_actor_watcher { addr actor_; };
+		struct add_engine_watcher { engine_id engid_id_; };
+		struct del_engine_watcher { engine_id engid_id_; };
+	}
+
+	ROMI_DEFINE_EVENT_MSG(event::add_actor_watcher);
+	ROMI_DEFINE_EVENT_MSG(event::del_actor_watcher);
+	ROMI_DEFINE_EVENT_MSG(event::add_engine_watcher);
+	ROMI_DEFINE_EVENT_MSG(event::del_engine_watcher);
 
 	template<typename T>
-	inline  std::shared_ptr<message_base> make_message(const addr &from, const addr &to, T &&val)
-	{
-		return std::make_shared<message<T>>(from, to, std::forward<T>(val));
-	}
+	std::shared_ptr<message_base> 
+		make_message(const addr &from, const addr &to, T &&val);
 }

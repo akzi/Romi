@@ -1,6 +1,6 @@
 # Romi
 c++ actor 
-
+```
 struct user:romi::actor
 {
 	user(bool val)
@@ -43,3 +43,4 @@ romi::engine engine;
 			std::this_thread::yield();
 		}
 	}).detach();
+	```

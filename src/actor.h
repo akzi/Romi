@@ -48,11 +48,9 @@ namespace romi
 		friend class dispatcher;
 
 		using msg_process_handle = std::function<bool(const message_base::ptr& )>;
+
+		lock_queue<message_base::ptr> msg_queue_;
 		addr addr_;
-		//msg
-		spinlock lock_;
-		
-		ypipe<std::shared_ptr<message_base>> msg_queue_;		
 		std::map<std::string, std::function<void(const message_base::ptr&)>> msg_handles_;
 		std::vector<msg_process_handle> default_msg_process_handles_;
 		std::function<void(message_base::ptr)> send_msg_;

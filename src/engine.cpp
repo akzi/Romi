@@ -85,7 +85,7 @@ namespace romi
 
 	void engine::add_actor(actor::ptr &_actor)
 	{
-		std::lock_guard<spinlock> lg(actors_.lock_);
+		std::lock_guard<std::mutex> lg(actors_.lock_);
 		actors_.actors_.emplace(_actor->addr_, _actor);
 	}
 
@@ -109,14 +109,14 @@ namespace romi
 
 	void engine::add_engine_watcher(addr from, addr _actor)
 	{
-		std::lock_guard<spinlock> lock_guard_(engine_watcher_.locker_);
+		std::lock_guard<std::mutex> lock_guard_(engine_watcher_.locker_);
 		engine_watcher_.watchers_[_actor.engine_id_].insert(from);
 	}
 
 
 	void engine::del_engine_watcher(addr from, addr _actor)
 	{
-		std::lock_guard<spinlock> lock_guard_(engine_watcher_.locker_);
+		std::lock_guard<std::mutex> lock_guard_(engine_watcher_.locker_);
 		engine_watcher_.watchers_[_actor.engine_id_].erase(from);
 	}
 

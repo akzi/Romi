@@ -72,27 +72,43 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <Optimization>Disabled</Optimization>
+      <Optimization>Full</Optimization>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)..\..\deps\zeromq4-x\src;$(SolutionDir)..\..\deps\thread-pool-cpp\include\thread_pool;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <StructMemberAlignment>4Bytes</StructMemberAlignment>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <Optimization>Disabled</Optimization>
+      <Optimization>Full</Optimization>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)..\..\deps\zeromq4-x\src;$(SolutionDir)..\..\deps\thread-pool-cpp\include\thread_pool;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <StructMemberAlignment>4Bytes</StructMemberAlignment>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)..\..\deps\zeromq4-x\src;$(SolutionDir)..\..\deps\thread-pool-cpp\include\thread_pool;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
+      <StructMemberAlignment>4Bytes</StructMemberAlignment>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -102,11 +118,15 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)..\..\deps\zeromq4-x\src;$(SolutionDir)..\..\deps\thread-pool-cpp\include\thread_pool;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
+      <StructMemberAlignment>4Bytes</StructMemberAlignment>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -119,7 +139,6 @@
     <ClCompile Include="..\..\..\src\engine.cpp" />
     <ClCompile Include="..\..\..\src\romi.cpp" />
     <ClCompile Include="..\..\..\src\dispatcher.cpp" />
-    <ClCompile Include="..\..\..\src\spinlock.cpp" />
     <ClCompile Include="..\..\..\src\timer.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -129,11 +148,9 @@
     <ClInclude Include="..\..\..\src\engine.h" />
     <ClInclude Include="..\..\..\src\function_traits.hpp" />
     <ClInclude Include="..\..\..\src\message.hpp" />
-    <ClInclude Include="..\..\..\src\mpsc_bounded_queue.hpp" />
     <ClInclude Include="..\..\..\src\romi.hpp" />
     <ClInclude Include="..\..\..\src\dispatcher.h" />
     <ClInclude Include="..\..\..\src\dispatcher_pool.h" />
-    <ClInclude Include="..\..\..\src\spinlock.h" />
     <ClInclude Include="..\..\..\src\impl.hpp" />
     <ClInclude Include="..\..\..\src\timer.hpp" />
     <ClInclude Include="..\..\..\src\ypipe.hpp" />

@@ -39,7 +39,7 @@ namespace romi
 
 		struct actors
 		{
-			spinlock lock_;
+			std::mutex lock_;
 			std::map<addr, actor::ptr, addr_less> actors_;
 		} actors_;
 
@@ -52,7 +52,7 @@ namespace romi
 		//watcher
 		struct engine_watcher
 		{
-			spinlock locker_;
+			std::mutex locker_;
 			std::map<engine_id, std::set<addr,addr_less>> watchers_;
 		} engine_watcher_;
 	};

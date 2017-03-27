@@ -34,10 +34,9 @@ struct user:romi::actor
 	
 	bool val_;
 };
-void ypipe_test();
 int main()
 {
-	ypipe_test();
+	//ypipe_test();
 
 	romi::engine engine;
 	engine.start();

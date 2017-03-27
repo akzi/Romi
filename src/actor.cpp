@@ -5,7 +5,6 @@ namespace romi
 
 	actor::actor()
 	{
-		msg_queue_.check_read();
 		init_msg_process_handle();
 	}
 
@@ -59,13 +58,12 @@ namespace romi
 
 	bool actor::dispatch_msg()
 	{
-		lock_.lock();
-		auto item = msg_queue_.read();
-		lock_.unlock();
-		if (!item.first || !item.second)
-			return false;
-		dispatch_msg(item.second);
-		return msg_queue_.check_read();
+		message_base::ptr msg;
+		if (msg_queue_.pop(msg))
+		{
+			dispatch_msg(msg);
+		}
+		return !!msg_queue_.jobs();
 	}
 
 	void actor::dispatch_msg(const std::shared_ptr<message_base> &msg)
@@ -112,10 +110,7 @@ namespace romi
 
 	bool actor::receive_msg(std::shared_ptr<message_base> &&msg)
 	{
-		std::lock_guard<spinlock> lg(lock_);
-
-		msg_queue_.write(std::move(msg));
-		return msg_queue_.flush();
+		return msg_queue_.push(std::move(msg)) == 1;
 	}
 
 	void actor::init_msg_process_handle()

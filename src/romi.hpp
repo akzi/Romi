@@ -9,13 +9,13 @@
 #include <stdint.h>
 #include <type_traits>
 #include <iostream>
+#include <queue>
+#include <cassert>
 
 #include "function_traits.hpp"
 #include "config.h"
-#include "ypipe.hpp"
-#include "mpsc_bounded_queue.hpp"
 #include "addr.hpp"
-#include "spinlock.h"
+#include "lock_queue.hpp"
 #include "timer.hpp"
 #include "message.hpp"
 #include "actor.h"

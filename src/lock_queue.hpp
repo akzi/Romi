@@ -19,7 +19,7 @@ namespace romi
 			return queue_.size();
 		}
 
-		bool pop(T &job, int timeout_mills = 0)
+		bool pop(T &job)
 		{
 			std::unique_lock<std::mutex> locker(mtex_);
 			if (queue_.empty())

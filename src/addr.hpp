@@ -6,8 +6,8 @@ namespace romi
 
 	struct addr
 	{
-		engine_id  engine_id_;
-		actor_id actor_id_;
+		engine_id  engine_id_ = 0;
+		actor_id actor_id_ = 0;
 		std::weak_ptr<class actor> actor_;
 	};
 

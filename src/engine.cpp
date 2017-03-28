@@ -34,14 +34,20 @@ namespace romi
 	}
 
 
+	void engine::bind(int port)
+	{
+		port_ = port;
+	}
+
 	void engine::start()
 	{
 		assert(!is_start_);
 		is_start_ = true;
 		timer_.start();
 		dispatcher_pool_.start();
+		net_.bind(port_);
+		net_.start();
 	}
-
 
 	void engine::stop()
 	{
@@ -67,18 +73,26 @@ namespace romi
 			});
 		};
 
-		_actor->cancel_timer_ = [this](timer_id id) { timer_.cancel_timer(id); };
+		_actor->cancel_timer_ = [this](timer_id id) { 
+			timer_.cancel_timer(id); 
+		};
 
 		_actor->add_watcher_ = [this](addr from, addr _actor) {
 			if (_actor.engine_id_ == engine_id_)
-				return send(make_message(from, _actor, sys::add_watcher {from}));
+				return send(make_message(from, _actor, sys::add_watcher{ from }));
 			add_remote_watcher(from, _actor);
 		};
+		
 		_actor->cancel_watch_ = [this](addr from, addr _actor) {
 			if (_actor.engine_id_ == engine_id_)
-				return send(make_message(from, _actor, sys::del_watcher {from}));
-
+				return send(make_message(from, _actor, sys::del_watcher{ from }));
+			del_remote_watcher(from, _actor);
 		};
+		
+		_actor->close_callback_ = [this](addr _addr) {
+			del_actor(_addr); 
+		};
+		
 		send(make_message(_actor->addr_, _actor->addr_, sys::actor_init()));
 		add_actor(_actor);
 	}
@@ -89,22 +103,32 @@ namespace romi
 		actors_.actors_.emplace(_actor->addr_, _actor);
 	}
 
+
+	void engine::del_actor(addr &_addr)
+	{
+		std::lock_guard<std::mutex> lg(actors_.lock_);
+		actors_.actors_.erase(_addr);
+	}
+
 	void engine::send_to_net(message_base::ptr &&msg)
 	{
-
+		if (const auto socket = find_socket(msg->to_.engine_id_))
+		{
+			sys::net_send *send_msg = new sys::net_send;
+		}
 	}
 
 	void engine::add_remote_watcher(addr from, addr _actor)
 	{
 		add_engine_watcher(from, _actor);
-		send_to_net(make_message(from, _actor, sys::add_watcher {from}));
+		send_to_net(make_message(from, _actor, sys::add_watcher{ from }));
 	}
 
 
 	void engine::del_remote_watcher(addr from, addr _actor)
 	{
 		del_engine_watcher(from, _actor);
-		send_to_net(make_message(from, _actor, sys::del_watcher {from}));
+		send_to_net(make_message(from, _actor, sys::del_watcher{ from }));
 	}
 
 	void engine::add_engine_watcher(addr from, addr _actor)

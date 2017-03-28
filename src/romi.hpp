@@ -1,5 +1,6 @@
 #pragma once
 #include <map>
+#include <list>
 #include <set>
 #include <vector>
 #include <thread>
@@ -11,7 +12,9 @@
 #include <iostream>
 #include <queue>
 #include <cassert>
+#include <string>
 
+#include "zmq.h"
 #include "function_traits.hpp"
 #include "config.h"
 #include "addr.hpp"
@@ -21,5 +24,6 @@
 #include "actor.h"
 #include "dispatcher.h"
 #include "dispatcher_pool.h"
+#include "net.h"
 #include "engine.h"
 #include "impl.hpp"

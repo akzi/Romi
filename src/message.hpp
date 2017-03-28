@@ -41,6 +41,7 @@ namespace romi
 		std::string type_;
 		virtual ~message_base() {}
 		template<typename T> T* get();
+		virtual std::string to_data() { return std::string(); }
 	private:
 		virtual void* get_impl(const std::type_info&info) { return nullptr; }
 	};
@@ -53,7 +54,10 @@ namespace romi
 	public:
 		message(const addr &from, const addr &to, T value);
 		virtual void* get_impl(const std::type_info& info);
+		std::string to_data();
 	};
+
+	
 
 	//sys
 	namespace sys
@@ -61,22 +65,52 @@ namespace romi
 		struct actor_init { };
 		struct engine_offline { };
 		struct timer_expire { timer_id id_; };
+
+		struct add_watcher { addr actor_; };
+		struct del_watcher { addr actor_; };
+
+		struct actor_close { addr actor_; };
+
+		//net
+		struct net_connect 
+		{
+			std::string remote_addr_;
+			engine_id id;
+			addr actor_;
+		};
+
+		struct net_connect_result
+		{
+			net_connect net_connect_;
+			void *socket_;
+		};
+
+		struct net_close
+		{
+			void *socket_;
+		};
+
+		struct net_send 
+		{
+			std::string buffer_;
+			void *socket_;
+			addr from_actor_;
+		};
+
+		struct net_send_failed
+		{
+			net_send net_send_;
+			std::string strerror_;
+		};
 	}
 
 	ROMI_DEFINE_SYS_MSG(sys::actor_init);
 	ROMI_DEFINE_SYS_MSG(sys::timer_expire);
 
-	//event
-	namespace sys
-	{
-		struct add_watcher { addr actor_; };
-		struct del_watcher { addr actor_; };
-	}
 
 	ROMI_DEFINE_EVENT_MSG(sys::add_watcher);
 	ROMI_DEFINE_EVENT_MSG(sys::del_watcher);
 
 	template<typename T>
-	std::shared_ptr<message_base> 
-		make_message(const addr &from, const addr &to, T &&val);
+	message_base::ptr make_message(const addr &, const addr &, T &&);
 }

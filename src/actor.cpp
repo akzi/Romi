@@ -8,7 +8,10 @@ namespace romi
 		init_msg_process_handle();
 	}
 
-	actor::~actor() {}
+	actor::~actor() 
+	{
+	
+	}
 
 
 	timer_id actor::set_timer(std::size_t mills, timer_handle &&handle)
@@ -33,6 +36,7 @@ namespace romi
 		if (actor_ == addr_ ||
 			actors_watchers_.find(actor_) != actors_watchers_.end())
 			return;
+		actors_watchers_.insert(actor_);
 		add_watcher_(addr_, actor_);
 	}
 
@@ -48,7 +52,17 @@ namespace romi
 
 	void actor::close()
 	{
-
+		for (auto itr: observers_)
+		{
+			send(itr, sys::actor_close{addr_});
+		}
+		for (auto itr :actors_watchers_)
+		{
+			cancel_watch_(addr_, itr);
+		}
+		actors_watchers_.clear();
+		observers_.clear();
+		is_close_ = true;
 	}
 
 	void actor::init()
@@ -66,17 +80,22 @@ namespace romi
 		return !!msg_queue_.jobs();
 	}
 
-	void actor::dispatch_msg(const std::shared_ptr<message_base> &msg)
+	void actor::dispatch_msg(const message_base::ptr &msg)
 	{
 		for (auto &itr: default_msg_process_handles_)
 		{
 			if (itr(msg))
-				return;
+				break;
+		}
+
+		if (is_close_)
+		{
+			close_callback_(addr_);
 		}
 	}
 
 
-	bool actor::apply_msg(const std::shared_ptr<message_base> &msg)
+	bool actor::apply_msg(const message_base::ptr &msg)
 	{
 		auto &handle = msg_handles_[msg->type_];
 		if (!handle)
@@ -93,7 +112,7 @@ namespace romi
 		return true;
 	}
 
-	void actor::default_msg_process(const std::shared_ptr<message_base> &msg)
+	void actor::default_msg_process(const message_base::ptr &msg)
 	{
 		std::cout << "Can't find message process handle : " <<
 			msg->type_.c_str() << std::endl;
@@ -108,7 +127,7 @@ namespace romi
 		timer_handles_.erase(itr);
 	}
 
-	bool actor::receive_msg(std::shared_ptr<message_base> &&msg)
+	bool actor::receive_msg(message_base::ptr &&msg)
 	{
 		return msg_queue_.push(std::move(msg)) == 1;
 	}
@@ -121,6 +140,7 @@ namespace romi
 		});
 
 		default_msg_process_handles_.emplace_back([this](const message_base::ptr& msg) {
+
 			if (const auto ptr = msg->get<sys::timer_expire>())
 			{
 				timer_expire(ptr->id_);
@@ -130,6 +150,7 @@ namespace romi
 		});
 
 		default_msg_process_handles_.emplace_back([this](const message_base::ptr& msg) {
+
 			if (const auto ptr = msg->get<sys::add_watcher>())
 			{
 				observers_.insert(ptr->actor_);
@@ -139,6 +160,7 @@ namespace romi
 		});
 
 		default_msg_process_handles_.emplace_back([this](const message_base::ptr& msg) {
+
 			if (const auto ptr = msg->get<sys::del_watcher>())
 			{
 				observers_.erase(ptr->actor_);
@@ -148,6 +170,7 @@ namespace romi
 		});
 
 		default_msg_process_handles_.emplace_back([this](const message_base::ptr& msg) {
+
 			if (msg->get<sys::actor_init>())
 			{
 				init();
@@ -157,6 +180,7 @@ namespace romi
 		});
 
 		default_msg_process_handles_.emplace_back([this](const message_base::ptr& msg) {
+
 			default_msg_process(msg);
 			return true;
 		});

@@ -27,6 +27,12 @@ namespace romi
 	}
 
 	template<typename T>
+	std::string romi::message<T>::to_data()
+	{
+
+	}
+
+	template<typename T>
 	inline  std::shared_ptr<romi::message_base>
 		make_message(const addr &from, const addr &to, T &&val)
 	{
@@ -58,7 +64,7 @@ namespace romi
 	template<typename Message>
 	inline void actor::receivce_help(std::function<void(const addr&, const Message &)> handle)
 	{
-		auto func = [handle](std::shared_ptr<message_base> msg) {
+		auto func = [handle](message_base::ptr msg) {
 			Message *message = msg->get<Message>();
 			assert(message);
 			handle(msg->from_, *message);

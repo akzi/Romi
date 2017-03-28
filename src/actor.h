@@ -31,15 +31,15 @@ namespace romi
 
 		bool dispatch_msg();
 
-		void dispatch_msg(const std::shared_ptr<message_base> &msg);
+		void dispatch_msg(const message_base::ptr &msg);
 
-		bool apply_msg(const std::shared_ptr<message_base> &msg);
+		bool apply_msg(const message_base::ptr &msg);
 
-		void default_msg_process(const std::shared_ptr<message_base> &msg);
+		void default_msg_process(const message_base::ptr &msg);
 
 		void timer_expire(timer_id id);
 
-		bool receive_msg(std::shared_ptr<message_base> &&msg);
+		bool receive_msg(message_base::ptr &&msg);
 
 		template<typename Message>
 		inline void receivce_help(std::function<void(const addr&, const Message &)>);
@@ -60,6 +60,9 @@ namespace romi
 		timer_id timer_id_ = 0;
 		std::map<timer_id, std::pair<timer_id, timer_handle>> timer_handles_;
 
+		//close
+		bool is_close_ = false;
+		std::function<void(addr)> close_callback_;
 
 		//Observer 
 		std::set<addr, addr_less> observers_;

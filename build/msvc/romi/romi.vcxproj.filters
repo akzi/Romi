@@ -62,16 +62,16 @@
     <ClInclude Include="..\..\..\src\config.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\yqueue.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\ypipe.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\src\timer.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\impl.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\net.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\deps\zeromq4-x\include\zmq.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,6 +1,58 @@
 #pragma once
 namespace romi
 {
+	//
+
+	inline std::string serialize_to_string(sys::engine_offline &)
+	{
+		return{};
+	}
+	inline std::string serialize_to_string(sys::actor_close &)
+	{
+		return{};
+	}
+	inline std::string serialize_to_string(sys::actor_init &)
+	{
+		return{};
+	}
+
+	inline std::string serialize_to_string(sys::not_find_remote_engine &)
+	{
+		return{};
+	}
+	inline std::string serialize_to_string(sys::timer_expire&)
+	{
+		return{};
+	}
+	inline std::string serialize_to_string(sys::net_connect_result&)
+	{
+		return{};
+	}
+
+	inline std::string serialize_to_string(sys::net_send_failed&)
+	{
+		return{};
+	}
+
+	inline std::string serialize_to_string(std::string &)
+	{
+		return{};
+	}
+
+	inline std::string serialize_to_string(sys::add_watcher&)
+	{
+		return{};
+	}
+
+	inline std::string serialize_to_string(sys::del_watcher&)
+	{
+		return{};
+	}
+
+
+	
+
+	//
 	//addr
 	inline bool operator == (const addr &left, const addr &right)
 	{
@@ -21,7 +73,7 @@ namespace romi
 	inline void* romi::message<T>::get_impl(const std::type_info& info)
 	{
 		if (typeid(T) == info)
-			return &value_;
+			return value_.get();
 		else
 			return nullptr;
 	}
@@ -29,7 +81,37 @@ namespace romi
 	template<typename T>
 	std::string romi::message<T>::to_data()
 	{
+		std::string value_buffer = serialize_to_string(*value_);
+		std::string buffer;
+		buffer.resize(get_sizeof(from_) +
+			get_sizeof(to_) +
+			get_sizeof(type_) +
+			get_sizeof(value_buffer));
 
+		uint8_t *ptr = (uint8_t *)buffer.data();
+		encode_uint64(ptr, from_.actor_id_);
+		encode_uint64(ptr, from_.engine_id_);
+		encode_uint64(ptr, to_.actor_id_);
+		encode_uint64(ptr, to_.engine_id_);
+		encode_string(ptr, type_);
+		encode_string(ptr, value_buffer);
+		return buffer;
+	}
+
+	template<typename T>
+	message_base::ptr message<T>::make_shared(const void* buffer, std::size_t len)
+	{
+		uint8_t *ptr = (uint8_t*)buffer;
+		auto msg = std::make_shared<message<T>>();
+		msg->from_.actor_id_ = decode_uint64(ptr);
+		msg->from_.engine_id_ = decode_uint64(ptr);
+		msg->to_.actor_id_ = decode_uint64(ptr);
+		msg->to_.engine_id_ = decode_uint64(ptr);
+		msg->type_ = decode_string(ptr);
+
+		auto value_buffer = decode_string(ptr);
+		msg->value_.reset(build_message<T>(msg->type_, value_buffer.data(), value_buffer.size()));
+		return msg;
 	}
 
 	template<typename T>
@@ -40,8 +122,8 @@ namespace romi
 	}
 
 	template<typename T>
-	inline romi::message<T>::message(const addr &from, const addr &to, T value)
-		: value_(std::move(value))
+	inline romi::message<T>::message(const addr &from, const addr &to, T &&value)
+		: value_(new T(std::move(value)))//copy
 	{
 		from_ = from;
 		to_ = to;
@@ -70,6 +152,9 @@ namespace romi
 			handle(msg->from_, *message);
 		};
 		msg_handles_[get_message_type<Message>()] = func;
+		message_build::instance().regist([](const void *buffer, std::size_t len) {
+			return message<Message>::make_shared(buffer, len);
+		});
 	}
 
 

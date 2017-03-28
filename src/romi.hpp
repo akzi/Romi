@@ -13,7 +13,10 @@
 #include <queue>
 #include <cassert>
 #include <string>
+#include <stdexcept>
 
+
+#include "exceptions.hpp"
 #include "zmq.h"
 #include "function_traits.hpp"
 #include "config.h"
@@ -21,6 +24,7 @@
 #include "lock_queue.hpp"
 #include "timer.hpp"
 #include "message.hpp"
+#include "message_builder.hpp"
 #include "actor.h"
 #include "dispatcher.h"
 #include "dispatcher_pool.h"

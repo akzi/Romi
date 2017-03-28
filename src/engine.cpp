@@ -12,6 +12,17 @@ namespace romi
 			stop();
 	}
 
+
+	void engine::init()
+	{
+		net_.bind_handle_msg([this](void*, std::size_t) {
+
+		});
+		net_.bind_send_msg_to_actor([this](message_base::ptr msg) {
+			send(std::move(msg));
+		});
+	}
+
 	actor_id engine::gen_actor_id()
 	{
 		return next_actor_id++;
@@ -110,12 +121,20 @@ namespace romi
 		actors_.actors_.erase(_addr);
 	}
 
-	void engine::send_to_net(message_base::ptr &&msg)
+	void engine::send_to_net(message_base::ptr &&message_)
 	{
-		if (const auto socket = find_socket(msg->to_.engine_id_))
+		if (const auto socket = find_socket(message_->to_.engine_id_))
 		{
-			sys::net_send *send_msg = new sys::net_send;
+			net_msg msg;
+			msg.send_ = new sys::net_send;
+			msg.send_->buffer_ = message_->to_data();
+			msg.send_->socket_ = socket;
+			msg.send_->from_actor_ = message_->from_;
+			msg.type_ = net_msg::e_send;
+			net_.send_msg(std::move(msg));
+			return;
 		}
+//		send(make_message(addr{}, message_->from_, sys::not_find_remote_engine{ message_ }));
 	}
 
 	void engine::add_remote_watcher(addr from, addr _actor)

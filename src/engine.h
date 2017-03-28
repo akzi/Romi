@@ -21,6 +21,8 @@ namespace romi
 
 		void stop();
 	private:
+		void init();
+
 		actor_id gen_actor_id();
 
 		void send(message_base::ptr &&msg);

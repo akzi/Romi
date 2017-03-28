@@ -13,6 +13,10 @@ namespace romi
 	
 	}
 
+	void actor::send(message_base::ptr &&msg)
+	{
+		send_msg_(std::move(msg));
+	}
 
 	timer_id actor::set_timer(std::size_t mills, timer_handle &&handle)
 	{

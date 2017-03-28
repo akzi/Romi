@@ -1,0 +1,17 @@
+// 指定语法规则 proto2 or proto3
+syntax = "proto3";
+
+message Book
+{
+    string name = 1;
+    int32 pages = 2;
+    float price = 3;
+}
+
+message Student
+{
+    int32 age = 1;
+    string name = 2;
+    float score = 3;
+    repeated Book arrBook = 4;
+}

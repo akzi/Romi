@@ -16,6 +16,8 @@ namespace romi
 		template<typename T>
 		void send(const addr &to, T &&obj);
 
+		void send(message_base::ptr &&msg);
+
 		timer_id set_timer(std::size_t mills, timer_handle &&);
 
 		void cancel_timer(timer_id id);

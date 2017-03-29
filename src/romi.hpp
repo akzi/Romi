@@ -16,11 +16,14 @@
 #include <stdexcept>
 
 
+#include "romi.pb.h"
+#include "romi.sys.pb.h"
+
+#include "addr_less.hpp"
 #include "exceptions.hpp"
 #include "zmq.h"
 #include "function_traits.hpp"
 #include "config.h"
-#include "addr.hpp"
 #include "lock_queue.hpp"
 #include "timer.hpp"
 #include "message.hpp"
@@ -28,6 +31,7 @@
 #include "actor.h"
 #include "dispatcher.h"
 #include "dispatcher_pool.h"
+#include "nameserver.h"
 #include "net.h"
 #include "engine.h"
 #include "impl.hpp"

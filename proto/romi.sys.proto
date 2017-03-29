@@ -1,0 +1,73 @@
+syntax = "proto3";
+import "romi.proto";
+
+package romi.sys;
+
+message actor_init 
+{ 
+
+};
+message engine_offline 
+{ 
+	uint64 engine_id = 1;
+};
+message timer_expire 
+{ 
+	uint64 timer_id = 1; 
+};
+
+message add_watcher 
+{ 
+	addr addr = 1; 
+};
+
+message del_watcher 
+{ 
+	addr addr = 1; 
+};
+
+message actor_close 
+{ 
+	addr addr = 1; 
+};
+
+//nameserver
+message regist_engine_req
+{
+	//engine name;
+	string addr = 1;
+};
+
+message regist_engine_resp
+{
+	uint64 engine_id = 1;
+}
+
+message regist_actor
+{
+	addr actor_addr = 1;
+	string name = 2;
+}
+
+enum regist_actor_result
+{
+    OK = 0;
+	EXISTED = 1;
+}
+
+message regist_actor_resp
+{
+	regist_actor_result result = 1;
+}
+
+message find_actor_req
+{
+	string name = 1;
+}
+
+message find_actor_resp
+{
+	find_actor_req req = 1;
+	bool find = 2;
+	addr actor_addr = 3;
+}

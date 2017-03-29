@@ -39,7 +39,7 @@ int main()
 	//ypipe_test();
 
 	romi::engine engine;
-	engine.run();
+	engine.start();
 
 	std::vector<romi::addr> addrs;
 

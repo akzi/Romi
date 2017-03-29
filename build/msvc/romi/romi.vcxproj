@@ -18,6 +18,39 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\actor.cpp" />
+    <ClCompile Include="..\..\..\src\dispatcher.cpp" />
+    <ClCompile Include="..\..\..\src\dispatcher_pool.cpp" />
+    <ClCompile Include="..\..\..\src\engine.cpp" />
+    <ClCompile Include="..\..\..\src\nameserver.cpp" />
+    <ClCompile Include="..\..\..\src\net.cpp" />
+    <ClCompile Include="..\..\..\src\romi.cpp" />
+    <ClCompile Include="..\..\..\src\romi.pb.cc" />
+    <ClCompile Include="..\..\..\src\romi.sys.pb.cc" />
+    <ClCompile Include="..\..\..\src\timer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\actor.h" />
+    <ClInclude Include="..\..\..\src\addr_less.hpp" />
+    <ClInclude Include="..\..\..\src\config.h" />
+    <ClInclude Include="..\..\..\src\dispatcher.h" />
+    <ClInclude Include="..\..\..\src\dispatcher_pool.h" />
+    <ClInclude Include="..\..\..\src\engine.h" />
+    <ClInclude Include="..\..\..\src\engine_info.h" />
+    <ClInclude Include="..\..\..\src\exceptions.hpp" />
+    <ClInclude Include="..\..\..\src\function_traits.hpp" />
+    <ClInclude Include="..\..\..\src\impl.hpp" />
+    <ClInclude Include="..\..\..\src\lock_queue.hpp" />
+    <ClInclude Include="..\..\..\src\message.hpp" />
+    <ClInclude Include="..\..\..\src\message_builder.hpp" />
+    <ClInclude Include="..\..\..\src\nameserver.h" />
+    <ClInclude Include="..\..\..\src\net.h" />
+    <ClInclude Include="..\..\..\src\romi.hpp" />
+    <ClInclude Include="..\..\..\src\romi.pb.h" />
+    <ClInclude Include="..\..\..\src\romi.sys.pb.h" />
+    <ClInclude Include="..\..\..\src\timer.hpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{834382A5-D3B1-4F77-BDF6-3AF6241EABBA}</ProjectGuid>
     <RootNamespace>romi</RootNamespace>
@@ -123,32 +156,6 @@
       <PreserveSbr>true</PreserveSbr>
     </Bscmake>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\..\src\actor.cpp" />
-    <ClCompile Include="..\..\..\src\dispatcher_pool.cpp" />
-    <ClCompile Include="..\..\..\src\engine.cpp" />
-    <ClCompile Include="..\..\..\src\net.cpp" />
-    <ClCompile Include="..\..\..\src\romi.cpp" />
-    <ClCompile Include="..\..\..\src\dispatcher.cpp" />
-    <ClCompile Include="..\..\..\src\timer.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\..\deps\zeromq4-x\include\zmq.h" />
-    <ClInclude Include="..\..\..\src\actor.h" />
-    <ClInclude Include="..\..\..\src\addr.hpp" />
-    <ClInclude Include="..\..\..\src\config.h" />
-    <ClInclude Include="..\..\..\src\engine.h" />
-    <ClInclude Include="..\..\..\src\exceptions.hpp" />
-    <ClInclude Include="..\..\..\src\function_traits.hpp" />
-    <ClInclude Include="..\..\..\src\message.hpp" />
-    <ClInclude Include="..\..\..\src\message_builder.hpp" />
-    <ClInclude Include="..\..\..\src\net.h" />
-    <ClInclude Include="..\..\..\src\romi.hpp" />
-    <ClInclude Include="..\..\..\src\dispatcher.h" />
-    <ClInclude Include="..\..\..\src\dispatcher_pool.h" />
-    <ClInclude Include="..\..\..\src\impl.hpp" />
-    <ClInclude Include="..\..\..\src\timer.hpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

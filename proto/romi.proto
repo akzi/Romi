@@ -1,0 +1,22 @@
+syntax = "proto3";
+package romi;
+
+message addr
+{
+	uint64 engine_id = 1;
+	uint64 actor_id = 2;
+};
+
+message actor_info
+{
+	addr addr = 1;
+	string name = 2;
+};
+
+
+message engine_info
+{
+	uint64 engine_id = 1;
+	string addr = 2;
+	string name = 3;
+};

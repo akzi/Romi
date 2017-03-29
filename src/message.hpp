@@ -3,29 +3,6 @@
 #include <google/protobuf/message.h>
 namespace romi
 {
-
-#define ROMI_DEFINE_MSG(Sym, Message) \
-	template<>  struct message_traits<Message> \
-	{  enum { value = 1 }; static constexpr char *_$_type = ""#Sym#Message;}
-
-#define ROMI_DEFINE_ACTOR_MSG(Message) ROMI_DEFINE_MSG([A], Message);
-#define ROMI_DEFINE_EVENT_MSG(Message) ROMI_DEFINE_MSG([E], Message);
-#define ROMI_DEFINE_SYS_MSG(Message) ROMI_DEFINE_MSG([S], Message);
-
-	template<typename T>
-	struct message_traits
-	{
-		enum { value = 0 };
-	};
-
-
-	template<typename T>
-	inline constexpr std::enable_if_t<message_traits<T>::value, const char *>
-		get_message_type()
-	{
-		return message_traits<std::decay_t<T>>::_$_type;
-	}
-
 	template<typename T>
 	inline std::enable_if_t<std::is_base_of<::google::protobuf::Message, T>::value, const char *>
 		get_message_type()
@@ -33,22 +10,17 @@ namespace romi
 		return T::descriptor()->full_name().c_str();
 	}
 
-
-
 	template<typename T>
-	inline std::enable_if<std::is_base_of<::google::protobuf::Message, T>::value, std::string> 
-		serialize_to_string(T &obj)
+	inline std::enable_if_t<std::is_base_of<::google::protobuf::Message, T>::value, std::string> 
+		serialize_to_string(const T &obj)
 	{
 		std::string buffer;
-		if (!obj.SerializeToString(buffer))
+		if (!obj.SerializeToString(&buffer))
 		{
 			throw std::runtime_error("obj.SerializeToString error");
 		}
 		return buffer;
 	}
-
-
-
 
 	inline void encode_uint32(uint8_t *&buffer_, uint32_t value)
 	{
@@ -101,7 +73,7 @@ namespace romi
 
 	inline void encode_string(uint8_t *&buffer_, std::string &str)
 	{
-		encode_uint32(buffer_, str.size());
+		encode_uint32(buffer_, (uint32_t)str.size());
 		memcpy(buffer_, str.data(), str.size());
 		buffer_ += str.size();
 	}
@@ -118,7 +90,7 @@ namespace romi
 
 	inline  std::size_t get_sizeof(addr )
 	{
-		return sizeof(actor_id) + sizeof(engine_id);
+		return sizeof(uint64_t) + sizeof(uint64_t);
 	}
 
 	inline std::size_t get_sizeof(const std::string &str)
@@ -157,7 +129,7 @@ namespace romi
 		std::string type_;
 		virtual ~message_base() {}
 		template<typename T> T* get();
-		virtual std::string to_data() { return std::string(); }
+		virtual std::string serialize_as_string() { return std::string(); }
 	private:
 		virtual void* get_impl(const std::type_info&info) { return nullptr; }
 	};
@@ -169,80 +141,14 @@ namespace romi
 		std::shared_ptr<T> value_;
 		message() {}
 	public:
-		message(const addr &from, const addr &to, T &&value);
+		message(const addr &from, const addr &to, const T &value);
 		virtual void* get_impl(const std::type_info& info);
-		std::string to_data();
-		static message_base::ptr make_shared(const void* buffer, std::size_t len);
+		std::string serialize_as_string();
+		static message_base::ptr parse_from_array(const void* buffer, std::size_t len);
 	};
 
-	
-
-	//sys
-	namespace sys
-	{
-		struct actor_init { };
-		struct engine_offline { };
-		struct timer_expire { timer_id id_; };
-
-		struct add_watcher { addr actor_; };
-		struct del_watcher { addr actor_; };
-
-		struct actor_close { addr actor_; };
-
-		struct not_find_remote_engine
-		{
-			message_base::ptr message_;
-		};
-		//net
-		struct net_connect 
-		{
-			std::string remote_addr_;
-			engine_id id;
-			addr actor_;
-		};
-
-		struct net_connect_result
-		{
-			net_connect net_connect_;
-			void *socket_;
-		};
-
-		struct net_close
-		{
-			void *socket_;
-		};
-
-		struct net_send 
-		{
-			std::string buffer_;
-			void *socket_;
-			addr from_actor_;
-		};
-
-		struct net_send_failed
-		{
-			net_send net_send_;
-			std::string strerror_;
-		};
-	}
-	ROMI_DEFINE_SYS_MSG(sys::engine_offline);
-	ROMI_DEFINE_SYS_MSG(sys::actor_close);
-	ROMI_DEFINE_SYS_MSG(sys::actor_init);
-	ROMI_DEFINE_SYS_MSG(sys::timer_expire);
-	ROMI_DEFINE_SYS_MSG(sys::not_find_remote_engine);
-	ROMI_DEFINE_SYS_MSG(sys::net_connect_result);
-	ROMI_DEFINE_SYS_MSG(sys::net_send_failed);
-
-	ROMI_DEFINE_ACTOR_MSG(std::string);
-
-
-	ROMI_DEFINE_EVENT_MSG(sys::add_watcher);
-	ROMI_DEFINE_EVENT_MSG(sys::del_watcher);
-
-	
-
 	template<typename T>
-	message_base::ptr make_message(const addr &, const addr &, T &&);
+	message_base::ptr make_message(const addr &, const addr &, const T &);
 
 	class message_build
 	{

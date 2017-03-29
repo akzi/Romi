@@ -33,3 +33,7 @@ x64
 Release
 Debug
 .*
+
+# protoc gen these files
+*.pb.cc
+*.pb.h

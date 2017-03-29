@@ -15,7 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\src\romi.cpp">
+    <ClCompile Include="..\..\..\src\nameserver.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\net.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\engine.cpp">
@@ -33,7 +36,13 @@
     <ClCompile Include="..\..\..\src\timer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\net.cpp">
+    <ClCompile Include="..\..\..\src\romi.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\romi.sys.pb.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\romi.pb.cc">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -44,16 +53,31 @@
     <ClInclude Include="..\..\..\src\engine.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\actor.h">
+    <ClInclude Include="..\..\..\src\net.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\impl.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\message.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\addr.hpp">
+    <ClInclude Include="..\..\..\src\addr_less.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\function_traits.hpp">
+    <ClInclude Include="..\..\..\src\actor.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\exceptions.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\message_builder.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\config.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\lock_queue.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\dispatcher.h">
@@ -62,25 +86,22 @@
     <ClInclude Include="..\..\..\src\dispatcher_pool.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\config.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\src\timer.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\impl.hpp">
+    <ClInclude Include="..\..\..\src\function_traits.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\net.h">
+    <ClInclude Include="..\..\..\src\engine_info.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\deps\zeromq4-x\include\zmq.h">
+    <ClInclude Include="..\..\..\src\romi.sys.pb.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\exceptions.hpp">
+    <ClInclude Include="..\..\..\src\romi.pb.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\message_builder.hpp">
+    <ClInclude Include="..\..\..\src\nameserver.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

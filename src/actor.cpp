@@ -58,7 +58,9 @@ namespace romi
 	{
 		for (auto itr: observers_)
 		{
-			send(itr, sys::actor_close{addr_});
+			sys::actor_close _actor_close;
+			*_actor_close.mutable_addr() = addr_;
+			send(itr, _actor_close);
 		}
 		for (auto itr :actors_watchers_)
 		{
@@ -147,7 +149,7 @@ namespace romi
 
 			if (const auto ptr = msg->get<sys::timer_expire>())
 			{
-				timer_expire(ptr->id_);
+				timer_expire(ptr->timer_id());
 				return true;
 			}
 			return false;
@@ -157,7 +159,7 @@ namespace romi
 
 			if (const auto ptr = msg->get<sys::add_watcher>())
 			{
-				observers_.insert(ptr->actor_);
+				observers_.insert(ptr->addr());
 				return true;
 			}
 			return false;
@@ -167,7 +169,7 @@ namespace romi
 
 			if (const auto ptr = msg->get<sys::del_watcher>())
 			{
-				observers_.erase(ptr->actor_);
+				observers_.erase(ptr->addr());
 				return true;
 			}
 			return false;

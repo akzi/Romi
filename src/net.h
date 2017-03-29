@@ -3,23 +3,8 @@ namespace romi
 {
 	struct net_msg
 	{
-		enum type
-		{
-			e_connect = 1,
-			e_send,
-			e_close
-		}type_;
-
-		union 
-		{
-			sys::net_connect *connect_;
-			sys::net_send *send_;
-			sys::net_close *close_;
-		};
-		net_msg();
-		net_msg(net_msg &&other);
-		net_msg &operator = (net_msg &&other);
-		~net_msg();
+		std::string data;
+		uint64_t engine_id;
 	};
 
 	class msg_queue

@@ -2,35 +2,6 @@
 
 namespace romi
 {
-	net_msg & net_msg::operator=(net_msg &&other)
-	{
-		memcpy(this, &other, sizeof(net_msg));
-		memset(&other, 0, sizeof(net_msg));
-		return *this;
-	}
-
-	net_msg::net_msg(net_msg &&other)
-	{
-		memcpy(this, &other, sizeof(net_msg));
-		memset(&other, 0, sizeof(net_msg));
-	}
-
-	net_msg::net_msg()
-	{
-		memset(this, 0, sizeof(net_msg));
-	}
-
-	net_msg::~net_msg()
-	{
-		if (type_ == e_connect)
-			delete connect_;
-		else if (type_ == e_close)
-			delete close_;
-		else if (type_ == e_send)
-			delete send_;
-	}
-
-
 	//msg_queue
 	msg_queue::msg_queue()
 	{
@@ -69,7 +40,6 @@ namespace romi
 		}
 	}
 
-	//net
 	net::net()
 	{
 
@@ -194,31 +164,17 @@ namespace romi
 
 	void net::do_connect(net_msg &_msg)
 	{
-		assert(send_msg_to_actor_);
-		auto s = connect(_msg.connect_->remote_addr_);
-		auto addr = _msg.connect_->actor_;
-		send_msg_to_actor_(make_message(addr, addr,
-			sys::net_connect_result{ *_msg.connect_, s }));
+
 	}
 
 	void net::do_send(net_msg &_msg)
 	{
-		sys::net_send &send_ = *_msg.send_;
-		int rc = zmq_send(send_.socket_, send_.buffer_.data(),
-			send_.buffer_.size(), 0);
-		if (rc == -1)
-		{
-			assert(send_msg_to_actor_);
-			send_msg_to_actor_(make_message(addr{}, send_.from_actor_,
-				sys::net_send_failed{ send_, zmq_strerror(errno) }));
-		}
+
 	}
 
 	void net::do_close(net_msg &_msg)
 	{
-		int rc = zmq_close(_msg.close_->socket_);
-		if (rc != 0)
-			std::cout << zmq_strerror(errno) << std::endl;
+
 	}
 
 	void net::handle_msg(zmq_msg_t &_msg)
@@ -234,18 +190,6 @@ namespace romi
 			net_msg _msg;
 			if (!msg_queue_.pop_msg(_msg))
 				return;
-			switch (_msg.type_)
-			{
-			case net_msg::e_connect:
-				do_connect(_msg);
-				break;
-			case net_msg::e_send:
-				do_send(_msg);
-				break;
-			case net_msg::e_close:
-				do_close(_msg);
-				break;
-			}
 		}
 	}
 }

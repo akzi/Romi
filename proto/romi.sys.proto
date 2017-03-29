@@ -3,19 +3,57 @@ import "romi.proto";
 
 package romi.sys;
 
+
+//ping pong 
+message ping 
+{
+	uint64 engine_id = 1;
+};
+
+message pong
+{
+	uint64 engine_id = 1;
+};
+
+//net
+message net_connect
+{
+	string remote_addr = 1;
+	uint64 engine_id = 2;
+	addr from = 3;
+}
+
+message net_connect_notify
+{
+	net_connect net_connect = 1;
+	bool connected = 2;
+}
+
+message net_error_addr
+{
+	addr addr = 1;	
+};
+
+
 message actor_init 
 { 
 
 };
+
+
 message engine_offline 
 { 
 	uint64 engine_id = 1;
 };
+
+//timer
 message timer_expire 
 { 
 	uint64 timer_id = 1; 
 };
 
+
+//watcher
 message add_watcher 
 { 
 	addr addr = 1; 
@@ -28,25 +66,24 @@ message del_watcher
 
 message actor_close 
 { 
-	addr addr = 1; 
+	addr addr = 1;
 };
 
 //nameserver
 message regist_engine_req
 {
-	//engine name;
-	string addr = 1;
+	engine_info engine_info = 1;
 };
 
 message regist_engine_resp
 {
 	uint64 engine_id = 1;
+	bool result = 2;
 }
 
-message regist_actor
+message regist_actor_req
 {
-	addr actor_addr = 1;
-	string name = 2;
+	actor_info actor_info = 1;
 }
 
 enum regist_actor_result
@@ -69,5 +106,5 @@ message find_actor_resp
 {
 	find_actor_req req = 1;
 	bool find = 2;
-	addr actor_addr = 3;
+	actor_info actor_info = 3;
 }

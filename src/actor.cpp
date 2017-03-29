@@ -59,6 +59,8 @@ namespace romi
 		for (auto itr: observers_)
 		{
 			sys::actor_close _actor_close;
+			actor_info info;
+
 			*_actor_close.mutable_addr() = addr_;
 			send(itr, _actor_close);
 		}

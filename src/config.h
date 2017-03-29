@@ -1,21 +1,12 @@
 #pragma once
 namespace romi
 {
-	enum
+	struct config
 	{
-		dispatcher_queue_granularity = 128,
-		
-		msg_queue_granularity = 128,
-
-		//max actor size 
-		dispatcher_queue_size = 1024*16,
-
-		//0 for  hardware_concurrency
-		dispatcher_pool_size = 0,
-
-		//
-		net_heartbeart_interval = 1000,
-
-		net_bind_port = 10927,
+		std::string engine_name_;
+		std::string nameserver_addr_;
+		int zeromq_bind_port_ = 10927;
+		int net_heartbeart_interval = 1000;
+		int dispatcher_pool_size = 0;// CPU core count
 	};
 }

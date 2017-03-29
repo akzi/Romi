@@ -47,9 +47,9 @@ namespace romi
 	}
 
 
-	void engine::bind(int port)
+	void engine::set_config(config cfg)
 	{
-		port_ = port;
+		config_ = cfg;
 	}
 
 	void engine::start()
@@ -57,8 +57,8 @@ namespace romi
 		assert(!is_start_);
 		is_start_ = true;
 		timer_.start();
-		dispatcher_pool_.start();
-		net_.bind(port_);
+		dispatcher_pool_.start(config_.dispatcher_pool_size);
+		net_.bind(config_.zeromq_bind_port_);
 		net_.start();
 	}
 

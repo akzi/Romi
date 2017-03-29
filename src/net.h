@@ -1,10 +1,32 @@
 #pragma once
 namespace romi
 {
-	struct net_msg
+	namespace sys
 	{
-		std::string data;
-		uint64_t engine_id;
+		struct send_msg
+		{
+			std::string buffer_;
+			uint64_t engine_id_;
+		};
+	}
+
+	struct command
+	{
+		command();
+		command(command &&other);
+		command &operator= (command &&other);
+		~command();
+		enum type
+		{
+			e_null = 0,
+			e_net_connect,
+			e_send_msg,
+		} type_;
+		union 
+		{
+			sys::net_connect *net_connect_;
+			sys::send_msg *send_msg_;
+		};
 	};
 
 	class msg_queue
@@ -12,13 +34,14 @@ namespace romi
 	public:
 		msg_queue();
 		void init(void *zmq_ctx_);
-		void push_back(net_msg &&_msg);
-		bool pop_msg(net_msg &_msg);
+		void push_back(command &&_msg);
+		bool pop_msg(command &_msg);
 	private:
 		void notify();
+
 		void *socket_ = nullptr;
 		std::mutex socket_mutex_;
-		lock_queue<net_msg> msg_queue_;
+		lock_queue<command> msg_queue_;
 	};
 
 	class net
@@ -32,24 +55,25 @@ namespace romi
 
 		void bind_handle_msg(std::function<void(void*, std::size_t)> handle);
 
-		void send_msg(net_msg &&msg_);
+		void send_msg(command &&msg_);
 
 		void start();
 		
 		void stop();
 
+		void run_once(long timeout_millis);
+
 	private:
-		void run();
 
 		void init();
 
 		void* connect(std::string remote_addr);
 
-		void do_connect(net_msg &_msg);
+		void do_connect(command &_msg);
 
-		void do_send(net_msg &_msg);
+		void do_send(command &_msg);
 
-		void do_close(net_msg &_msg);
+		void do_close(command &_msg);
 
 		void handle_msg(zmq_msg_t &_msg);
 
@@ -64,6 +88,8 @@ namespace romi
 
 		std::thread worker_;
 		msg_queue msg_queue_;
+
+		std::map<uint64_t, void *> sockets_;
 		std::function<void(message_base::ptr&&)> send_msg_to_actor_;
 		std::function<void(void*, std::size_t)> handle_msg_;
 	};

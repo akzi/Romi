@@ -1,20 +1,23 @@
-#include "romi.hpp"
+#include "nameservice.h"
 
 namespace romi
 {
-
-	nameserver::~nameserver()
+	nameserivce::nameserivce()
 	{
 
 	}
 
-	void nameserver::regist_actor(const actor_info & info)
+	nameserivce::~nameserivce()
 	{
-		std::lock_guard<std::mutex> locker(actor_map_.mutex_);
+
+	}
+
+	void nameserivce::regist_actor(const actor_info & info)
+	{
 		actor_map_.actor_names_[info.name()] = info;
 	}
 
-	bool nameserver::find_actor(const std::string & name, addr &addr_)
+	bool nameserivce::find_actor(const std::string & name, addr &addr_)
 	{
 		std::lock_guard<std::mutex> locker(actor_map_.mutex_);
 		auto itr = actor_map_.actor_names_.find(name);
@@ -26,13 +29,13 @@ namespace romi
 		return false;
 	}
 
-	void nameserver::regist_engine(engine_info &engine)
+	void nameserivce::regist_engine(engine_info &engine)
 	{
 		std::lock_guard<std::mutex> locker(engine_map_.mutex_);
 		engine_map_.engine_map_[engine.name()] = engine;
 	}
 
-	bool nameserver::find_engine(const std::string &name, engine_info &engine)
+	bool nameserivce::find_engine(const std::string &name, engine_info &engine)
 	{
 		std::lock_guard<std::mutex> locker(engine_map_.mutex_);
 		auto itr = engine_map_.engine_map_.find(name);
@@ -44,7 +47,7 @@ namespace romi
 		return false;
 	}
 
-	bool nameserver::find_engine(uint64_t id, engine_info &engine)
+	bool nameserivce::find_engine(uint64_t id, engine_info &engine)
 	{
 		std::lock_guard<std::mutex> locker(engine_map_.mutex_);
 		for (auto &itr : engine_map_.engine_map_)
@@ -56,10 +59,7 @@ namespace romi
 		return false;
 	}
 
-	nameserver::nameserver()
-	{
 
-	}
 
 }
 

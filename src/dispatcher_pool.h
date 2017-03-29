@@ -8,7 +8,7 @@ namespace romi
 
 		~dispatcher_pool();
 
-		void start(int dispatch_count_ = dispatcher_pool_size);
+		void start(int dispatch_count_);
 
 		void stop();
 

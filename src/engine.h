@@ -15,7 +15,7 @@ namespace romi
 		std::enable_if_t<std::is_base_of<::google::protobuf::Message, T>::value>
 			send(const addr &from, const addr &to, const T &msg);
 
-		void bind(int port);
+		void set_config(config cfg);
 
 		void start();
 
@@ -51,8 +51,8 @@ namespace romi
 			std::map<addr, actor::ptr, addr_less> actors_;
 		} actors_;
 		
-		int port_ = net_bind_port;
-		
+		config config_;
+
 		std::atomic_bool is_start_{false};
 		std::atomic<uint64_t> next_actor_id { 1 };
 		

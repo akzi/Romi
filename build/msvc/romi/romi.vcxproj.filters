@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\src\nameserver.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\src\net.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -95,14 +92,18 @@
     <ClInclude Include="..\..\..\src\engine_info.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\romi.sys.pb.h">
+    <ClInclude Include="..\..\..\src\nameserivce.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\romi.pb.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\nameserver.h">
+    <ClInclude Include="..\..\..\src\romi.sys.pb.h">
       <Filter>头文件</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\proto\romi.proto" />
+    <None Include="..\..\..\proto\romi.sys.proto" />
   </ItemGroup>
 </Project>

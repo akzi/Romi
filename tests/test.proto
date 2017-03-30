@@ -1,6 +1,6 @@
 // 指定语法规则 proto2 or proto3
 syntax = "proto3";
-
+package test;
 message Book
 {
     string name = 1;

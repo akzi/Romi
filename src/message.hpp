@@ -12,7 +12,10 @@ namespace romi
 		{
 		
 		}
-		template<typename T> T* get();
+		template<typename T> T* get()const
+		{
+			return static_cast<T*>(get_impl(typeid(std::decay_t<T>)));
+		}
 
 		virtual std::string serialize_as_string() 
 		{
@@ -31,7 +34,7 @@ namespace romi
 			return to_;
 		}
 	private:
-		virtual void* get_impl(const std::type_info&info) 
+		virtual void* get_impl(const std::type_info&info) const
 		{ 
 			return nullptr; 
 		}
@@ -47,7 +50,7 @@ namespace romi
 		message(const addr &from, const addr &to, const T &value);
 		static message_base::ptr parse_from_array(const void* buffer, std::size_t len);
 	private:
-		virtual void* get_impl(const std::type_info& info);
+		virtual void* get_impl(const std::type_info& info)const ;
 		std::string serialize_as_string();
 	};
 

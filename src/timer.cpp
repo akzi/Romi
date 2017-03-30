@@ -95,6 +95,8 @@ namespace romi
 
 	void timer::cancel_timer(timer_id id)
 	{
+		if (!id)
+			return;
 		return timer_manager_.cancel_timer(id);
 	}
 

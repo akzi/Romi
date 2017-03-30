@@ -69,6 +69,13 @@ namespace romi
 		return false;
 	}
 
+	uint64_t nameservice::unique_id()
+	{
+		next_engine_id_++;
+		return std::chrono::high_resolution_clock::now()
+			.time_since_epoch().count() + next_engine_id_;
+	}
+
 	void nameservice::init()
 	{
 
@@ -94,13 +101,20 @@ namespace romi
 
 			sys::regist_engine_resp resp;
 			auto info = req.engine_info();
+			
+			info.set_engine_id(unique_id());
+			connect_engine(info);
+
 			if (!find_engine(info.name(), info))
 			{
 				resp.set_result(false);
 				return send(from, resp);
 			}
-			info.set_engine_id(unique_id());
-			send(from, resp);
+			regist_engine(info);
+
+			addr to = from;
+			to.set_engine_id(resp.engine_id());
+			send(to, resp);
 		});
 
 		receivce([this](const addr &from, const sys::find_actor_req &req) {
@@ -115,6 +129,32 @@ namespace romi
 			*resp.mutable_req() = req;
 			send(from, resp);
 		});
+
+		receivce([this](const addr &from, const sys::get_engine_list_req&) {
+
+			sys::get_engine_list_resp resp;
+			get_engine_list(resp);
+
+			send(from, resp);
+		});
+	}
+
+	void nameservice::connect_engine(const ::romi::engine_info& engine_info)
+	{
+		sys::net_connect msg;
+		msg.mutable_from()->CopyFrom(get_addr());
+		msg.mutable_remote_addr()->append(engine_info.addr());
+		msg.set_engine_id(engine_info.engine_id());
+
+		connect(msg);
+	}
+
+	void nameservice::get_engine_list(sys::get_engine_list_resp &resp)
+	{
+		for (auto &itr : engine_map_)
+		{
+			resp.add_engine_info()->CopyFrom(itr.second);
+		}
 	}
 
 }

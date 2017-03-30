@@ -1,14 +1,16 @@
 #pragma once
 namespace romi
 {
-	namespace sys
+namespace sys
+{
+	struct send_msg
 	{
-		struct send_msg
-		{
-			message_base::ptr message_;
-		};
-	}
+		message_base::ptr message_;
+	};
+}
 
+namespace net
+{
 	struct command
 	{
 		command();
@@ -23,7 +25,7 @@ namespace romi
 			e_net_connect,
 			e_send_msg,
 		} type_;
-		union 
+		union
 		{
 			sys::net_connect *net_connect_;
 			sys::send_msg *send_msg_;
@@ -52,16 +54,16 @@ namespace romi
 		using socket = void*;
 		io_engine();
 
-		void bind(int port);
+		void bind(const std::string &addr);
 
-		void bind_send_msg_to_actor(std::function<void(message_base::ptr&&)> handle);
+		void bind_send_msg(std::function<void(message_base::ptr&&)> handle);
 
-		void bind_handle_msg(std::function<void(void*, std::size_t)> handle);
+		void bind_handle_net_msg(std::function<void(void*, std::size_t)> handle);
 
 		void send_cmd(command &&msg_);
 
 		void start();
-		
+
 		void stop();
 
 	private:
@@ -96,7 +98,8 @@ namespace romi
 		cmd_queue msg_queue_;
 
 		std::map<uint64_t, void *> sockets_;
-		std::function<void(message_base::ptr&&)> send_msg_to_actor_;
+		std::function<void(message_base::ptr&&)> send_msg_;
 		std::function<void(void*, std::size_t)> handle_msg_;
 	};
+}
 }

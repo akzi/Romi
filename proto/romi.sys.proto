@@ -85,6 +85,16 @@ message regist_engine_resp
 	bool result = 2;
 }
 
+message get_engine_list_req
+{
+	
+}
+
+message get_engine_list_resp
+{
+	repeated engine_info engine_info = 1;
+}
+
 message regist_actor_req
 {
 	actor_info actor_info = 1;

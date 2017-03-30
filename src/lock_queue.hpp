@@ -15,7 +15,7 @@ namespace romi
 		std::size_t push(T &&item)
 		{
 			std::lock_guard<std::mutex> locker(mtex_);
-			queue_.push(std::forward<T>(item));
+			queue_.emplace(std::forward<T>(item));
 			return queue_.size();
 		}
 

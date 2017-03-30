@@ -1,7 +1,6 @@
 #include <iostream>
 #include "../src/romi.hpp"
 
-
 std::atomic_uint64_t msgs_ = 0;
 uint64_t last_msg_ = 0;
 
@@ -13,7 +12,7 @@ struct user:romi::actor
 	}
 	void init()
 	{
-		receivce([&](const romi::addr &from, const std::string &) {
+		receivce([&](const romi::addr &from, const romi::sys::ping &) {
 			msgs_++;
 		});
 
@@ -23,13 +22,6 @@ struct user:romi::actor
 			last_msg_ = msgs_;
 			return true; 
 		});
-
-		using romi::sys::add_watcher;
-		using romi::sys::del_watcher;
-
-		add_watcher(add_watcher{romi::addr()});
-		del_watcher(del_watcher{ romi::addr() });
-		
 	}
 	
 	bool val_;
@@ -51,7 +43,7 @@ int main()
 	for (size_t i = 0; i < 1000000000; i++)
 	{
 		for(auto &itr: addrs)
-		engine.send(itr, itr, std::string("msg"));
+			engine.send(itr, itr, romi::sys::ping{});
 	}
 
 	getchar();

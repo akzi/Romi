@@ -29,18 +29,6 @@ build_message2(const std::string& message_type, const char *buffer, std::size_t 
 
 int main()
 {
-	std::string buffer;
+	std::cout << sys::actor_init::descriptor()->full_name() << std::endl;
 
-	Book myBook;
-	myBook.set_name("hello");
-	myBook.set_pages(10);
-	myBook.set_price(10);
-
-	myBook.SerializeToString(&buffer);
-
-
-
-
-	auto name = get_message_type<Book>();
-	auto book = build_message2(name, buffer.data(), buffer.size());
 }

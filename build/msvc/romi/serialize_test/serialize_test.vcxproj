@@ -140,6 +140,11 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\..\tests\test.pb.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\romi.vcxproj">
+      <Project>{834382a5-d3b1-4f77-bdf6-3af6241eabba}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

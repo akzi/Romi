@@ -18,10 +18,9 @@ namespace romi
 		void dispatch(std::weak_ptr<actor> &&);
 		
 		bool steal_actor(std::weak_ptr<actor> &_actor);
-
 	private:
-
 		bool get_actor(std::weak_ptr<actor> &_actor);
+
 		void run();
 
 		void sleep();

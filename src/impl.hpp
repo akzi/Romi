@@ -1,15 +1,24 @@
 #pragma once
 namespace romi
 {
+#define REGIST_MESSAGE_BUILDER(TYPE)\
+	message_builder::instance().\
+	regist(get_message_type<TYPE>(),\
+	[](const void *buffer, std::size_t len) {\
+		return message<TYPE>::parse_from_array(buffer, len);\
+	});
+
 	template<typename T>
-	inline std::enable_if_t<std::is_base_of<::google::protobuf::Message, T>::value, std::string>
+	inline std::enable_if_t<std::is_base_of<
+		::google::protobuf::Message, T>::value, std::string>
 		get_message_type()
 	{
 		return T::descriptor()->full_name();
 	}
 
 	template<typename T>
-	inline std::enable_if_t<std::is_base_of<::google::protobuf::Message, T>::value, std::string>
+	inline std::enable_if_t<std::is_base_of<
+		::google::protobuf::Message, T>::value, std::string>
 		serialize_to_string(const T &obj)
 	{
 		std::string buffer;
@@ -98,7 +107,8 @@ namespace romi
 
 	//
 	inline google::protobuf::Message*
-		build_message(const std::string& message_type, const char *buffer, std::size_t len)
+		build_message(const std::string& message_type, 
+			const char *buffer, std::size_t len)
 	{
 		google::protobuf::Message* message = NULL;
 		auto descriptor =
@@ -107,7 +117,8 @@ namespace romi
 		if (descriptor)
 		{
 			const auto prototype =
-				google::protobuf::MessageFactory::generated_factory()->GetPrototype(descriptor);
+				google::protobuf::MessageFactory::
+				generated_factory()->GetPrototype(descriptor);
 			if (prototype)
 			{
 				message = prototype->New();
@@ -124,17 +135,9 @@ namespace romi
 			left.actor_id() == right.actor_id();
 	}
 
-	//message_base
-	template<typename T>
-	inline T* romi::message_base::get()
-	{
-		return static_cast<T*>(get_impl(typeid(std::decay_t<T>)));
-	}
-
-
 	//message
 	template<typename T>
-	inline void* romi::message<T>::get_impl(const std::type_info& info)
+	inline void* romi::message<T>::get_impl(const std::type_info& info)const
 	{
 		if (typeid(T) == info)
 			return value_.get();
@@ -174,7 +177,9 @@ namespace romi
 		auto to = decode_string(ptr);
 		msg->to_.ParseFromArray(to.data(), (int)to.size());
 		auto value = decode_string(ptr);
-		msg->value_.reset(reinterpret_cast<T*>(build_message(msg->type_, value.data(), value.size())));
+		auto message = build_message(msg->type_, value.data(), value.size());
+		assert(message);
+		msg->value_.reset(reinterpret_cast<T*>(message));
 		return msg;
 	}
 
@@ -208,7 +213,8 @@ namespace romi
 	}
 
 	template<typename Message>
-	inline void actor::receivce_help(std::function<void(const addr&, const Message &)> handle)
+	inline void actor::receivce_help(
+		std::function<void(const addr&, const Message &)> handle)
 	{
 		auto func = [handle](message_base::ptr msg) {
 			Message *message = msg->get<Message>();
@@ -216,10 +222,7 @@ namespace romi
 			handle(msg->from_, *message);
 		};
 		msg_handles_[get_message_type<Message>()] = func;
-		message_builder::instance().regist(get_message_type<Message>(), 
-			[](const void *buffer, std::size_t len) {
-			return message<Message>::parse_from_array(buffer, len);
-		});
+		REGIST_MESSAGE_BUILDER(Message);
 	}
 
 

@@ -38,9 +38,9 @@ namespace romi
 	void actor::watch(addr actor_)
 	{
 		if (actor_ == addr_ ||
-			actors_watchers_.find(actor_) != actors_watchers_.end())
+			watchers_.find(actor_) != watchers_.end())
 			return;
-		actors_watchers_.insert(actor_);
+		watchers_.insert(actor_);
 		add_watcher_(addr_, actor_);
 	}
 
@@ -48,9 +48,9 @@ namespace romi
 	void actor::cancel_watch(addr actor_)
 	{
 		if (actor_ == addr_ ||
-			actors_watchers_.find(actor_) == actors_watchers_.end())
+			watchers_.find(actor_) == watchers_.end())
 			return;
-		actors_watchers_.erase(actor_);
+		watchers_.erase(actor_);
 		cancel_watch_(addr_, actor_);
 	}
 
@@ -60,17 +60,31 @@ namespace romi
 		{
 			sys::actor_close _actor_close;
 			actor_info info;
-
-			*_actor_close.mutable_addr() = addr_;
+			_actor_close.mutable_addr()->CopyFrom(addr_);
 			send(itr, _actor_close);
 		}
-		for (auto itr :actors_watchers_)
+		for (auto itr :watchers_)
 		{
 			cancel_watch_(addr_, itr);
 		}
-		actors_watchers_.clear();
+		watchers_.clear();
 		observers_.clear();
 		is_close_ = true;
+	}
+
+
+	romi::addr actor::get_addr()
+	{
+		return addr_;
+	}
+
+
+	void actor::connect(sys::net_connect &msg)
+	{
+		addr to;
+		to.set_engine_id(addr_.engine_id());
+		to.set_actor_id(0);
+		send(to, msg);
 	}
 
 	void actor::init()
@@ -83,47 +97,40 @@ namespace romi
 		message_base::ptr msg;
 		if (msg_queue_.pop(msg))
 		{
-			dispatch_msg(msg);
-		}
-		return !!msg_queue_.jobs();
-	}
-
-	void actor::dispatch_msg(const message_base::ptr &msg)
-	{
-		for (auto &itr: default_msg_process_handles_)
-		{
-			if (itr(msg))
-				break;
+			apply_msg(msg);
 		}
 
 		if (is_close_)
 		{
 			close_callback_(addr_);
+			return false;
 		}
+		return !!msg_queue_.jobs();
 	}
 
-
-	bool actor::apply_msg(const message_base::ptr &msg)
+	void actor::apply_msg(const message_base::ptr &msg)
 	{
-		auto &handle = msg_handles_[msg->type_];
+		auto &handle = msg_handles_[msg->type()];
 		if (!handle)
-			return false;
+		{
+			std::cout << "can't find msg handle; "
+				<< msg->type() << std::endl;
+			return;
+		}
 		try
 		{
 			handle(msg);
 		}
-		catch (...)
+		catch (std::exception &e)
 		{
-			std::cout << "catch a exception" << std::endl;
+			std::cout << e.what() << std::endl;
 			close();
 		}
-		return true;
-	}
-
-	void actor::default_msg_process(const message_base::ptr &msg)
-	{
-		std::cout << "Can't find message process handle : " <<
-			msg->type_.c_str() << std::endl;
+		catch (...)
+		{
+			std::cout << "catch exception ,close "<< std::endl;
+			close();
+		}
 	}
 
 	void actor::timer_expire(timer_id id)
@@ -142,55 +149,59 @@ namespace romi
 
 	void actor::init_msg_process_handle()
 	{
-		default_msg_process_handles_.emplace_back([this](const message_base::ptr& msg) {
-
-			return apply_msg(msg);
-		});
-
-		default_msg_process_handles_.emplace_back([this](const message_base::ptr& msg) {
-
+		msg_handles_.emplace(get_message_type<sys::timer_expire>(),
+			[this](const message_base::ptr& msg) {
 			if (const auto ptr = msg->get<sys::timer_expire>())
 			{
 				timer_expire(ptr->timer_id());
-				return true;
 			}
-			return false;
 		});
 
-		default_msg_process_handles_.emplace_back([this](const message_base::ptr& msg) {
+		msg_handles_.emplace(get_message_type<sys::add_watcher>(),
+			[this](const message_base::ptr& msg) {
 
 			if (const auto ptr = msg->get<sys::add_watcher>())
 			{
 				observers_.insert(ptr->addr());
-				return true;
 			}
-			return false;
 		});
 
-		default_msg_process_handles_.emplace_back([this](const message_base::ptr& msg) {
+		msg_handles_.emplace(get_message_type<sys::del_watcher>(), 
+			[this](const message_base::ptr& msg) {
 
 			if (const auto ptr = msg->get<sys::del_watcher>())
 			{
 				observers_.erase(ptr->addr());
-				return true;
 			}
-			return false;
 		});
 
-		default_msg_process_handles_.emplace_back([this](const message_base::ptr& msg) {
+		msg_handles_.emplace(get_message_type<sys::engine_offline>(), 
+			[this](const message_base::ptr& msg) {
+
+			auto &handle = msg_handles_[get_message_type<sys::actor_close>()];
+			if (!handle)
+				throw std::runtime_error("not find sys::actor_close msg handle");
+
+			if (const auto ptr = msg->get<sys::engine_offline>())
+			{
+				sys::actor_close event;
+				for (auto &itr: watchers_)
+				{
+					if (itr.engine_id() == ptr->engine_id())
+					{
+						event.mutable_addr()->CopyFrom(itr);
+						handle(make_message(itr, addr_, event));
+					}
+				}
+			}
+		});
+		msg_handles_.emplace(get_message_type<sys::actor_init>(),
+			[this](const message_base::ptr& msg) {
 
 			if (msg->get<sys::actor_init>())
 			{
 				init();
-				return true;
 			}
-			return false;
-		});
-
-		default_msg_process_handles_.emplace_back([this](const message_base::ptr& msg) {
-
-			default_msg_process(msg);
-			return true;
 		});
 	}
 

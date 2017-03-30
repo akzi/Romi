@@ -86,12 +86,6 @@
     <ClInclude Include="..\..\..\src\function_traits.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\engine_info.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\nameserivce.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\src\romi.pb.h">
       <Filter>头文件</Filter>
     </ClInclude>

@@ -3,8 +3,8 @@
 namespace romi
 {
 
-const char *io_engine_monitor = "inproc://io_engine.monitor";
-const char *cmd_queue_inproc = "inproc://cmd_queue.ipc";
+const char *io_engine_monitor_addr = "inproc://io_engine.monitor.ipc";
+const char *cmd_queue_inproc_addr = "inproc://cmd_queue.ipc";
 
 namespace net
 {
@@ -54,7 +54,7 @@ namespace net
 	void cmd_queue::init(void *zmq_ctx_)
 	{
 		socket_ = zmq_socket(zmq_ctx_, ZMQ_PAIR);
-		if (zmq_connect(socket_, cmd_queue_inproc) == -1)
+		if (zmq_connect(socket_, cmd_queue_inproc_addr) == -1)
 			throw std::runtime_error(zmq_strerror(errno));
 		zmq_msg_t msg;
 		zmq_msg_init_size(&msg, 1);
@@ -77,7 +77,7 @@ namespace net
 	void cmd_queue::notify()
 	{
 		std::lock_guard<std::mutex> locker(socket_mutex_);
-		if (!zmq_send(socket_, "K", 1, 0))
+		if (zmq_send(socket_, "K", 1, 0) == -1)
 		{
 			throw std::runtime_error(zmq_strerror(errno));
 		}
@@ -101,14 +101,14 @@ namespace net
 			throw std::runtime_error(zmq_strerror(errno));
 		}
 
-		rc = zmq_socket_monitor(socket_, io_engine_monitor, ZMQ_EVENT_ALL);
+		rc = zmq_socket_monitor(socket_, io_engine_monitor_addr, ZMQ_EVENT_ALL);
 		if (rc == -1)
 		{
 			zmq_close(socket_);
 			throw std::runtime_error(zmq_strerror(errno));
 		}
-		auto monitor_ = zmq_socket(zmq_ctx_, ZMQ_PAIR);
-		rc = zmq_connect(socket_, io_engine_monitor);
+		monitor_ = zmq_socket(zmq_ctx_, ZMQ_PAIR);
+		rc = zmq_connect(monitor_, io_engine_monitor_addr);
 		if (rc == -1)
 		{
 			zmq_close(socket_);
@@ -155,26 +155,26 @@ namespace net
 				{ monitor_, 0, ZMQ_POLLIN, 0}
 			};
 
-			int ret = zmq_poll(&pollitem[0], 3, -1);
-			if (ret == 0)
-				return;
-
-			else if (ret == -1)
+			switch (zmq_poll(&pollitem[0], 3, 10))
 			{
+			case 0:
+				continue;
+			case -1:
 				std::cout << zmq_strerror(errno) << std::endl;
 				return;
-			}
-			else if (pollitem[0].revents | ZMQ_POLLIN)
-			{
-				handle_msg_event();
-			}
-			else if (pollitem[1].revents | ZMQ_POLLIN)
-			{
-				handle_cmd_queue_event();
-			}
-			else if (pollitem[2].revents | ZMQ_POLLIN)
-			{
-				handle_monitor_event();
+			default:
+				if (pollitem[0].revents | ZMQ_POLLIN)
+				{
+					handle_msg_event();
+				}
+				else if (pollitem[1].revents | ZMQ_POLLIN)
+				{
+					handle_cmd_queue_event();
+				}
+				else if (pollitem[2].revents | ZMQ_POLLIN)
+				{
+					handle_monitor_event();
+				}
 			}
 
 		} while (is_stop_ == false);
@@ -184,7 +184,7 @@ namespace net
 	{
 		zmq_ctx_ = zmq_init(1);
 		cmd_queue_inproc_ = zmq_socket(zmq_ctx_, ZMQ_PAIR);
-		if (zmq_bind(cmd_queue_inproc_, io_engine_monitor) == -1)
+		if (zmq_bind(cmd_queue_inproc_, cmd_queue_inproc_addr ) == -1)
 			throw std::runtime_error(zmq_strerror(errno));
 		msg_queue_.init(zmq_ctx_);
 	}

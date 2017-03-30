@@ -3,6 +3,9 @@ namespace romi
 {
 	struct config
 	{
+		config()
+		{
+		}
 		bool is_nameserver_ = false;
 		//0 for get engine from nameserver
 		uint64_t engine_id_ = 0;

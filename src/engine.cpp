@@ -96,7 +96,7 @@ namespace romi
 			}
 			else if (const auto _actor = find_actor(msg->to_))
 			{
-				if (!_actor->receive_msg(std::move(msg)))
+				if (_actor->receive_msg(std::move(msg)) == 1)
 				{
 					dispatcher_pool_.dispatch(_actor);
 				}
@@ -110,7 +110,7 @@ namespace romi
 
 	void engine::set_config(config cfg)
 	{
-		config_ = cfg;
+		config_ = std::move(cfg);
 		engine_id_ = config_.engine_id_;
 	}
 
@@ -194,8 +194,8 @@ namespace romi
 			del_actor(_addr); 
 		};
 		
-		send(make_message(_actor->addr_, _actor->addr_, sys::actor_init()));
 		add_actor(_actor);
+		send(make_message(_actor->addr_, _actor->addr_, sys::actor_init()));
 	}
 
 

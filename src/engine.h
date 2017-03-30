@@ -70,13 +70,15 @@ namespace romi
 		void regist_msg_handle(std::string &type, const msg_process_handle &handle);
 
 		void unregist_msg_handle(std::string &type);
+
+		config config_;
+
 		struct actors
 		{
 			std::mutex lock_;
 			std::map<addr, actor::ptr, addr_less> actors_;
 		} actors_;
 		
-		config config_;
 
 		std::atomic_bool is_start_{false};
 		std::atomic<uint64_t> next_actor_id { 1 };

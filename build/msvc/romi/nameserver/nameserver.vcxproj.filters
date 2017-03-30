@@ -15,10 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\services\nameservice\nameservice.cpp">
+    <ClCompile Include="..\..\..\..\services\nameservice\main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\services\nameservice\main.cpp">
+    <ClCompile Include="..\..\..\..\services\nameservice\nameservice.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

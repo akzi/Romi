@@ -142,9 +142,9 @@ namespace romi
 		timer_handles_.erase(itr);
 	}
 
-	bool actor::receive_msg(message_base::ptr &&msg)
+	std::size_t actor::receive_msg(message_base::ptr &&msg)
 	{
-		return msg_queue_.push(std::move(msg)) == 1;
+		return msg_queue_.push(std::move(msg));
 	}
 
 	void actor::init_msg_process_handle()

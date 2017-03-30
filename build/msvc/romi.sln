@@ -13,8 +13,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unit_test", "romi\unit_test
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "serialize_test", "romi\serialize_test\serialize_test.vcxproj", "{0550F090-18F7-4685-ADD6-5FF7057A5521}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nameservice", "romi\nameservice\nameservice.vcxproj", "{85ACF375-696A-476D-8AE8-C1FD590D39AD}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libzmq11", "..\..\deps\zeromq4-x\builds\msvc\libzmq\libzmq11.vcxproj", "{641C5F36-32EE-4323-B740-992B651CF9D6}"
 EndProject
 Global
@@ -91,26 +89,6 @@ Global
 		{0550F090-18F7-4685-ADD6-5FF7057A5521}.WithOpenPGM|x64.Build.0 = Release|x64
 		{0550F090-18F7-4685-ADD6-5FF7057A5521}.WithOpenPGM|x86.ActiveCfg = Release|Win32
 		{0550F090-18F7-4685-ADD6-5FF7057A5521}.WithOpenPGM|x86.Build.0 = Release|Win32
-		{85ACF375-696A-476D-8AE8-C1FD590D39AD}.Debug|x64.ActiveCfg = Debug|x64
-		{85ACF375-696A-476D-8AE8-C1FD590D39AD}.Debug|x64.Build.0 = Debug|x64
-		{85ACF375-696A-476D-8AE8-C1FD590D39AD}.Debug|x86.ActiveCfg = Debug|Win32
-		{85ACF375-696A-476D-8AE8-C1FD590D39AD}.Debug|x86.Build.0 = Debug|Win32
-		{85ACF375-696A-476D-8AE8-C1FD590D39AD}.Release|x64.ActiveCfg = Release|x64
-		{85ACF375-696A-476D-8AE8-C1FD590D39AD}.Release|x64.Build.0 = Release|x64
-		{85ACF375-696A-476D-8AE8-C1FD590D39AD}.Release|x86.ActiveCfg = Release|Win32
-		{85ACF375-696A-476D-8AE8-C1FD590D39AD}.Release|x86.Build.0 = Release|Win32
-		{85ACF375-696A-476D-8AE8-C1FD590D39AD}.StaticDebug|x64.ActiveCfg = Debug|x64
-		{85ACF375-696A-476D-8AE8-C1FD590D39AD}.StaticDebug|x64.Build.0 = Debug|x64
-		{85ACF375-696A-476D-8AE8-C1FD590D39AD}.StaticDebug|x86.ActiveCfg = Debug|Win32
-		{85ACF375-696A-476D-8AE8-C1FD590D39AD}.StaticDebug|x86.Build.0 = Debug|Win32
-		{85ACF375-696A-476D-8AE8-C1FD590D39AD}.StaticRelease|x64.ActiveCfg = Release|x64
-		{85ACF375-696A-476D-8AE8-C1FD590D39AD}.StaticRelease|x64.Build.0 = Release|x64
-		{85ACF375-696A-476D-8AE8-C1FD590D39AD}.StaticRelease|x86.ActiveCfg = Release|Win32
-		{85ACF375-696A-476D-8AE8-C1FD590D39AD}.StaticRelease|x86.Build.0 = Release|Win32
-		{85ACF375-696A-476D-8AE8-C1FD590D39AD}.WithOpenPGM|x64.ActiveCfg = Release|x64
-		{85ACF375-696A-476D-8AE8-C1FD590D39AD}.WithOpenPGM|x64.Build.0 = Release|x64
-		{85ACF375-696A-476D-8AE8-C1FD590D39AD}.WithOpenPGM|x86.ActiveCfg = Release|Win32
-		{85ACF375-696A-476D-8AE8-C1FD590D39AD}.WithOpenPGM|x86.Build.0 = Release|Win32
 		{641C5F36-32EE-4323-B740-992B651CF9D6}.Debug|x64.ActiveCfg = Debug|x64
 		{641C5F36-32EE-4323-B740-992B651CF9D6}.Debug|x64.Build.0 = Debug|x64
 		{641C5F36-32EE-4323-B740-992B651CF9D6}.Debug|x86.ActiveCfg = Debug|Win32

@@ -42,7 +42,7 @@ namespace romi
 
 		void timer_expire(timer_id id);
 
-		bool receive_msg(message_base::ptr &&msg);
+		std::size_t receive_msg(message_base::ptr &&msg);
 
 		template<typename Message>
 		inline void receivce_help(std::function<void(const addr&, const Message &)>);

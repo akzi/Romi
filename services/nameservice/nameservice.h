@@ -27,6 +27,7 @@ namespace romi
 		void connect_engine(const ::romi::engine_info& engine_info);
 
 		void get_engine_list(sys::get_engine_list_resp &resp);
+
 		uint64_t unique_id();
 
 		uint64_t next_engine_id_ = 0;

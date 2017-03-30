@@ -12,6 +12,7 @@ struct user:romi::actor
 	}
 	void init()
 	{
+		std::cout << "init" << std::endl;
 		receivce([&](const romi::addr &from, const romi::sys::ping &) {
 			msgs_++;
 		});
@@ -26,11 +27,14 @@ struct user:romi::actor
 	
 	bool val_;
 };
-int main()
+int actor_receivce()
 {
-	//ypipe_test();
-
 	romi::engine engine;
+
+	romi::config config;
+	config.dispatcher_pool_size = 0;
+
+	engine.set_config(config);
 	engine.start();
 
 	std::vector<romi::addr> addrs;

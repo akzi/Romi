@@ -21,13 +21,27 @@ namespace romi
 
 		void stop();
 	private:
+
+		void ping(uint64_t engine_id)
+		{
+			sys::ping ping;
+			ping.set_engine_id(engine_id);
+			addr from;
+			addr to;
+			from.set_engine_id(engine_id_);
+			from.set_actor_id(0);
+			to.set_engine_id(engine_id);
+			to.set_actor_id(0);
+			auto msg = make_message(from,to, ping);
+			send_to_net(msg);
+		}
 		void init();
 
 		uint64_t gen_actor_id();
 
 		void send(message_base::ptr &&msg);
 
-		void send_to_net(message_base::ptr &&msg);
+		void send_to_net(message_base::ptr &msg);
 
 		void add_remote_watcher(addr from, addr _actor);
 
@@ -44,6 +58,8 @@ namespace romi
 		void add_actor(actor::ptr &_actor);
 
 		void del_actor(addr &_actor);
+
+		void handle_msg(message_base::ptr &msg);
 
 		struct actors
 		{
@@ -67,6 +83,6 @@ namespace romi
 			std::map<uint64_t, std::set<addr,addr_less>> watchers_;
 		} engine_watcher_;
 
-		net net_;
+		io_engine io_engine_;
 	};
 }

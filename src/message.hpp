@@ -54,14 +54,14 @@ namespace romi
 	template<typename T>
 	message_base::ptr make_message(const addr &, const addr &, const T &);
 
-	class message_build
+	class message_builder
 	{
 	public:
 		using build_handle =
 			std::function<message_base::ptr(const void*, std::size_t)>;
-		static message_build &instance()
+		static message_builder &instance()
 		{
-			static message_build inst;
+			static message_builder inst;
 			return inst;
 		}
 		void regist(std::string message_type, const build_handle &handle)

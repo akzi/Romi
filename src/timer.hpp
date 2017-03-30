@@ -9,7 +9,7 @@
 namespace romi
 {
 	using namespace std::chrono;
-	using timer_id = std::size_t;
+	using timer_id = uint64_t;
 
 	using timer_handle = std::function<bool()>;
 	struct timer_callback
@@ -27,7 +27,7 @@ namespace romi
 	public:
 		int64_t do_timer();
 		timer_id set_timer(std::size_t timeout, timer_handle &&);
-		void cancel_timer(std::size_t id);
+		void cancel_timer(timer_id id);
 	private:
 		std::size_t next_id_ = 0;
 	};
@@ -38,7 +38,7 @@ namespace romi
 		timer();
 		~timer();
 		timer_id set_timer(std::size_t timeout, timer_handle &&);
-		void cancel_timer(std::size_t id);
+		void cancel_timer(timer_id id);
 		void start();
 		void stop();
 	private:

@@ -29,11 +29,15 @@ message net_connect_notify
 	bool connected = 2;
 }
 
-message net_error_addr
+message net_not_actor
 {
 	addr addr = 1;	
 };
 
+message net_not_engine_id
+{
+	addr addr = 1;	
+};
 
 message actor_init 
 { 

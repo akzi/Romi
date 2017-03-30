@@ -168,13 +168,13 @@ namespace romi
 	{
 		uint8_t *ptr = (uint8_t*)data;
 		auto msg = std::make_shared<message<T>>();
-		type_ = decode_string(ptr);
+		msg->type_ = decode_string(ptr);
 		auto from = decode_string(ptr);
-		from_.ParseFromArray(from.data(), (int)from.size());
+		msg->from_.ParseFromArray(from.data(), (int)from.size());
 		auto to = decode_string(ptr);
-		to_.ParseFromArray(to.data(), (int)to.size());
+		msg->to_.ParseFromArray(to.data(), (int)to.size());
 		auto value = decode_string(ptr);
-		auto obj = build_message(msg->type_, value.data(), value.size());
+		msg->value_.reset(reinterpret_cast<T*>(build_message(msg->type_, value.data(), value.size())));
 		return msg;
 	}
 
@@ -216,7 +216,7 @@ namespace romi
 			handle(msg->from_, *message);
 		};
 		msg_handles_[get_message_type<Message>()] = func;
-		message_build::instance().regist(get_message_type<Message>(), 
+		message_builder::instance().regist(get_message_type<Message>(), 
 			[](const void *buffer, std::size_t len) {
 			return message<Message>::parse_from_array(buffer, len);
 		});

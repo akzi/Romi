@@ -14,10 +14,20 @@ namespace romi
 
 	void engine::init()
 	{
-		net_.bind_handle_msg([this](void*, std::size_t) {
-
+		io_engine_.bind_handle_msg([this](void* data, std::size_t len) {
+			uint8_t *ptr = (uint8_t *)data;
+			auto msg_type = decode_string(ptr);
+			auto handle = message_builder::instance().get_message_build_handle(msg_type);
+			if (!handle)
+			{
+				throw not_find_message_builder(msg_type);
+			}
+			auto msg = handle(data, len);
+			if (!msg)
+				throw build_message_error();
+			handle_msg(msg);
 		});
-		net_.bind_send_msg_to_actor([this](message_base::ptr msg) {
+		io_engine_.bind_send_msg_to_actor([this](message_base::ptr msg) {
 			send(std::move(msg));
 		});
 	}
@@ -58,8 +68,8 @@ namespace romi
 		is_start_ = true;
 		timer_.start();
 		dispatcher_pool_.start(config_.dispatcher_pool_size);
-		net_.bind(config_.zeromq_bind_port_);
-		net_.start();
+		io_engine_.bind(config_.zeromq_bind_port_);
+		io_engine_.start();
 	}
 
 	void engine::stop()
@@ -142,9 +152,21 @@ namespace romi
 		actors_.actors_.erase(_addr);
 	}
 
-	void engine::send_to_net(message_base::ptr &&message_)
+	void engine::handle_msg(message_base::ptr &msg)
 	{
+		if (msg->type() == get_message_type<sys::ping>())
+		{
 
+		}
+	}
+
+	void engine::send_to_net(message_base::ptr &message_)
+	{
+		auto buffer = message_->serialize_as_string();
+		command cmd;
+		cmd.send_msg_ = new sys::send_msg;
+		cmd.send_msg_->message_ = message_;
+		io_engine_.send_cmd(std::move(cmd));
 	}
 
 	void engine::add_remote_watcher(addr from, addr _actor)

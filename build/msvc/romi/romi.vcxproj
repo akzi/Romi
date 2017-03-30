@@ -23,7 +23,7 @@
     <ClCompile Include="..\..\..\src\dispatcher.cpp" />
     <ClCompile Include="..\..\..\src\dispatcher_pool.cpp" />
     <ClCompile Include="..\..\..\src\engine.cpp" />
-    <ClCompile Include="..\..\..\src\net.cpp" />
+    <ClCompile Include="..\..\..\src\io_engine.cpp" />
     <ClCompile Include="..\..\..\src\romi.cpp" />
     <ClCompile Include="..\..\..\src\romi.pb.cc" />
     <ClCompile Include="..\..\..\src\romi.sys.pb.cc" />
@@ -44,7 +44,7 @@
     <ClInclude Include="..\..\..\src\message.hpp" />
     <ClInclude Include="..\..\..\src\message_builder.hpp" />
     <ClInclude Include="..\..\..\src\nameserivce.h" />
-    <ClInclude Include="..\..\..\src\net.h" />
+    <ClInclude Include="..\..\..\src\io_engine.h" />
     <ClInclude Include="..\..\..\src\romi.hpp" />
     <ClInclude Include="..\..\..\src\romi.pb.h" />
     <ClInclude Include="..\..\..\src\romi.sys.pb.h" />

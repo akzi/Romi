@@ -69,7 +69,7 @@ namespace romi
 		return next_id_;
 	}
 
-	void timer_manager::cancel_timer(std::size_t id)
+	void timer_manager::cancel_timer(timer_id id)
 	{
 		for (auto itr = begin(); itr != end(); ++itr)
 		{
@@ -93,7 +93,7 @@ namespace romi
 		return id;
 	}
 
-	void timer::cancel_timer(std::size_t id)
+	void timer::cancel_timer(timer_id id)
 	{
 		return timer_manager_.cancel_timer(id);
 	}

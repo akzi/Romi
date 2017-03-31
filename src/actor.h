@@ -35,6 +35,16 @@ namespace romi
 		addr get_nameserver_addr();
 
 		void connect(sys::net_connect &msg);
+
+		uint64_t get_actor_size()
+		{
+			get_actor_size_();
+		}
+
+		uint64_t get_dispatcher_size()
+		{
+			get_dispatcher_size_();
+		}
 	private:
 		virtual void init();
 
@@ -83,6 +93,12 @@ namespace romi
 
 		std::function<void(addr&, addr&)> add_watcher_;
 		std::function<void(addr&, addr&)> cancel_watch_;
+
+		//config functions
+		std::function<uint64_t()> get_actor_size_;
+		std::function<uint64_t()> get_dispatcher_size_;
+		std::function<uint64_t()> increase_dispather_;
+
 
 	};
 }

@@ -122,3 +122,4 @@ message find_actor_resp
 	bool find = 2;
 	actor_info actor_info = 3;
 }
+

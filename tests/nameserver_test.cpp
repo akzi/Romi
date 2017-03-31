@@ -1,8 +1,5 @@
 #include "romi.hpp"
 
-
-
-
 struct nameserver_test: romi::actor 
 {
 private:
@@ -22,7 +19,6 @@ private:
 		});
 
 		send(get_nameserver_addr(), sys::get_engine_list_req{});
-
 	}
 };
 

@@ -3,7 +3,7 @@ namespace romi
 {
 	dispatcher_pool::dispatcher_pool()
 	{
-
+		dispatchers_.resize(max_dispather_size_);
 	}
 
 	dispatcher_pool::~dispatcher_pool()
@@ -13,51 +13,66 @@ namespace romi
 		stop();
 	}
 
-
-	void dispatcher_pool::start(int dispatch_count_ )
+	void dispatcher_pool::start(int size )
 	{
 		is_start_ = true;
-		if (!dispatch_count_)
-			dispatch_count_ = std::thread::hardware_concurrency();
-		dispatchers_.resize(dispatch_count_);
-		for (auto &itr : dispatchers_)
+		if (!size)
+			size = std::thread::hardware_concurrency();
+		
+		for (int i = 0; i < size; i++)
 		{
-			itr = std::make_shared<dispatcher>([this](std::weak_ptr<actor> &_actor) {
+			 dispatchers_[i] = std::make_shared<dispatcher>(
+				 [this](std::weak_ptr<actor> &_actor) {
 				return steal_actor(_actor);
-			});
+			 });
+			 dispatchers_[i]->start();
+			 ++dispather_size_;
 		}
-
-		for (auto &itr: dispatchers_)
-			itr->start();
 	}
 
 
 	void dispatcher_pool::stop()
 	{
-		for (auto &itr: dispatchers_)
-			itr->stop();
+		for (auto &itr : dispatchers_)
+		{
+			if(itr)
+				itr->stop();
+		}
+			
 
 		is_start_ = false;
 	}
 
 	void dispatcher_pool::dispatch(std::weak_ptr<actor> &&actor_)
 	{
-		try
+		auto dispatcher = dispatchers_[++dispatch_index_% dispather_size_];
+		dispatcher->dispatch(std::move(actor_));
+	}
+
+
+	void dispatcher_pool::increase(int count)
+	{
+		std::lock_guard<std::mutex> locker(increase_mutex_);
+		for (int i = 0; i < max_dispather_size_ && 0 < count; i++)
 		{
-			dispatchers_[++dispatch_index_% dispatchers_.size()]->dispatch(std::move(actor_));
-			return;
+			if (dispatchers_[i] == nullptr)
+			{
+				dispatchers_[i] = std::make_shared<dispatcher>(
+					[this](std::weak_ptr<actor> &_actor) {
+					return steal_actor(_actor);
+				});
+				dispatchers_[i]->start();
+				count--;
+			}
 		}
-		catch (const std::exception& e)
-		{
-			std::cout << e.what();
-		}
+		dispather_size_ += count;
 	}
 
 	bool dispatcher_pool::steal_actor(std::weak_ptr<actor> &_actor)
 	{
-		for (size_t i = 0; i < dispatchers_.size(); i++)
+		for (size_t i = 0; i < dispather_size_; i++)
 		{
-			auto index = rand() % dispatchers_.size();
+			auto index = rand() % dispather_size_;
 			if (dispatchers_[index]->steal_actor(_actor))
 				return true;
 		}

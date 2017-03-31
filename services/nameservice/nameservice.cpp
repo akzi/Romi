@@ -78,6 +78,12 @@ namespace romi
 
 	void nameservice::init()
 	{
+		std::cout << "nameservice" << std::endl;
+
+		receivce([this](const addr &, const sys::net_connect_notify &notify) {
+
+			std::cout << "connect to "<<notify.net_connect().remote_addr() << std::endl;
+		});
 
 		receivce([this](const addr &from, const sys::actor_close &msg) {
 
@@ -100,16 +106,17 @@ namespace romi
 		receivce([this](const addr &from, const sys::regist_engine_req &req) {
 
 			sys::regist_engine_resp resp;
-			auto info = req.engine_info();
 			
+			auto info = req.engine_info();
 			info.set_engine_id(unique_id());
-			connect_engine(info);
+			resp.set_engine_id(info.engine_id());
 
-			if (!find_engine(info.name(), info))
-			{
-				resp.set_result(false);
-				return send(from, resp);
-			}
+			connect_engine(info);
+			/*	if (find_engine(info.name(), info))
+				{
+					resp.set_result(false);
+					return send(from, resp);
+				}*/
 			regist_engine(info);
 
 			addr to = from;

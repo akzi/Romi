@@ -38,7 +38,7 @@ namespace romi
 		buffer_ += sizeof(value);
 	}
 
-	inline uint32_t decode_uint32(const unsigned char *buffer_)
+	inline uint32_t decode_uint32(uint8_t *&buffer_)
 	{
 		uint32_t value =
 			(((uint32_t)buffer_[0]) << 24) |
@@ -85,7 +85,7 @@ namespace romi
 		buffer_ += str.size();
 	}
 
-	inline std::string decode_string(uint8_t *buffer_)
+	inline std::string decode_string(uint8_t *&buffer_)
 	{
 		auto len = decode_uint32(buffer_);
 		assert(len >= 0);

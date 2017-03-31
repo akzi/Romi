@@ -4,7 +4,8 @@
 
 namespace romi
 {
-	constexpr uint64_t nameserver_id = 1;
+	constexpr uint64_t g_nameserver_actor_id = 1;
+	constexpr uint64_t nameserver_engine_id = 1;
 	engine::engine()
 	{
 	}
@@ -13,7 +14,7 @@ namespace romi
 		if (is_start_)
 			stop();
 	}
-	void engine::init()
+	void engine::init_io_engine()
 	{
 		io_engine_.bind_handle_net_msg([this](void* data, std::size_t len) {
 			uint8_t *ptr = (uint8_t *)data;
@@ -33,16 +34,17 @@ namespace romi
 		io_engine_.bind_send_msg([this](message_base::ptr msg) {
 			send(std::move(msg));
 		});
+	}
 
-		message_builder::instance().regist(get_message_type<sys::ping>(), 
-			[](const void *buffer, std::size_t len) {
-			return message<sys::ping>::parse_from_array(buffer, len);
-		});
-
+	void engine::init_message_builder()
+	{
 		REGIST_MESSAGE_BUILDER(sys::ping);
 		REGIST_MESSAGE_BUILDER(sys::pong);
 		REGIST_MESSAGE_BUILDER(sys::engine_offline);
+	}
 
+	void engine::init_message_handle()
+	{
 		//
 		regist_msg_handle(get_message_type<sys::ping>(),
 			[this](const message_base::ptr &msg) {
@@ -53,7 +55,7 @@ namespace romi
 			}
 		});
 
-		regist_msg_handle(get_message_type<sys::pong>(), 
+		regist_msg_handle(get_message_type<sys::pong>(),
 			[this](const message_base::ptr &msg) {
 
 			if (const auto ptr = msg->get<sys::pong>())
@@ -62,7 +64,16 @@ namespace romi
 			}
 		});
 
-
+		regist_msg_handle(get_message_type<sys::net_connect>(), 
+			[this](const message_base::ptr &ptr) {
+			if (const auto msg = ptr->get<sys::net_connect>())
+			{
+				net::command cmd;
+				cmd.net_connect_ = new sys::net_connect(*msg);
+				cmd.type_ = net::command::e_net_connect;
+				io_engine_.send_cmd(std::move(cmd));
+			}
+		});
 	}
 
 	uint64_t engine::gen_actor_id()
@@ -77,17 +88,17 @@ namespace romi
 		cmd.type_ = net::command::e_net_connect;
 		cmd.net_connect_->mutable_remote_addr()->append(remote_addr);
 		cmd.net_connect_->set_engine_id(engine_id);
-		cmd.net_connect_->mutable_from()->set_actor_id(0);
-		cmd.net_connect_->mutable_from()->set_engine_id(0);
+		cmd.net_connect_->mutable_from()->set_actor_id(engine_id_);
+		cmd.net_connect_->mutable_from()->set_engine_id(engine_actor_id_);
 
 		io_engine_.send_cmd(std::move(cmd));
 	}
 
 	void engine::send(message_base::ptr &&msg)
 	{
-		if (msg->from_.engine_id() == engine_id_)
+		if (msg->to_.engine_id() == engine_id_)
 		{
-			if (msg->to().actor_id() == 0)
+			if (msg->to().actor_id() == engine_actor_id_)
 			{
 				if (auto handle = find_msg_handle(msg->type()))
 				{
@@ -117,7 +128,9 @@ namespace romi
 	void engine::start()
 	{
 		assert(!is_start_);
-		is_start_ = true;
+		init_io_engine();
+		init_message_builder();
+		init_message_handle();
 		timer_.start();
 		dispatcher_pool_.start(config_.dispatcher_pool_size);
 		io_engine_.bind(config_.net_bind_addr_);
@@ -128,6 +141,7 @@ namespace romi
 			check_engine_watcher();
 			return true;
 		});
+		is_start_ = true;
 		if (config_.nameserver_addr_.empty() ||
 			config_.engine_name_.empty() ||
 			config_.is_nameserver_)
@@ -220,16 +234,7 @@ namespace romi
 
 	void engine::handle_net_msg(message_base::ptr &msg)
 	{
-		if (msg->to().actor_id() == 0)
-		{
-			auto itr = msg_handles_.find(msg->type());
-			if (itr != msg_handles_.end())
-				itr->second(msg);
-
-		}else if (const auto actor = find_actor(msg->to()))
-		{
-			actor->receive_msg(std::move(msg));
-		}
+		send(std::move(msg));
 	}
 
 	void engine::send_to_net(message_base::ptr &message_)
@@ -293,7 +298,7 @@ namespace romi
 		pong.set_engine_id(engine_id_);
 		addr from;
 		from.set_engine_id(engine_id_);
-		from.set_actor_id(0);
+		from.set_actor_id(engine_actor_id_);
 		send(make_message(from, msg->from(), pong));
 	}
 
@@ -347,10 +352,10 @@ namespace romi
 		addr from;
 		addr to;
 		from.set_engine_id(engine_id_);
-		from.set_actor_id(0);
+		from.set_actor_id(engine_actor_id_);
 
 		to.set_engine_id(to_engine_id);
-		to.set_actor_id(0);
+		to.set_actor_id(engine_actor_id_);
 
 		auto msg = make_message(from, to, ping);
 		send_to_net(msg);
@@ -380,7 +385,7 @@ namespace romi
 			}
 		});
 
-		connect(0, config_.nameserver_addr_);
+		connect(config_.nameserver_engine_id_, config_.nameserver_addr_);
 
 		
 		sys::regist_engine_req req;
@@ -390,11 +395,11 @@ namespace romi
 
 		addr from;
 		addr to;
-		from.set_actor_id(0);
-		from.set_engine_id(0);
+		from.set_actor_id(engine_actor_id_);
+		from.set_engine_id(engine_id_);
 
-		to.set_engine_id(0);
-		to.set_actor_id(nameserver_id);
+		to.set_engine_id(config_.nameserver_engine_id_);
+		to.set_actor_id(config_.nameserver_actor_id_);
 
 		send(make_message(from, to, req));
 

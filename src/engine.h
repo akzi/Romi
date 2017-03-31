@@ -27,7 +27,11 @@ namespace romi
 	private:
 		using msg_process_handle = actor::msg_process_handle;
 
-		void init();
+		void init_io_engine();
+
+		void init_message_builder();
+
+		void init_message_handle();
 
 		uint64_t gen_actor_id();
 
@@ -84,7 +88,7 @@ namespace romi
 		std::atomic<uint64_t> next_actor_id { 1 };
 		
 		uint64_t engine_id_ = 0;
-
+		const uint64_t engine_actor_id_ = 0;
 		dispatcher_pool dispatcher_pool_;
 		timer timer_;
 		//watcher

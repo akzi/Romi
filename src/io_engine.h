@@ -67,7 +67,9 @@ namespace net
 		void stop();
 
 	private:
-		void run();
+		void start_subscriber();
+
+		void start_publisher();
 
 		void init();
 
@@ -79,11 +81,7 @@ namespace net
 
 		void process_msg();
 
-		void handle_monitor_event();
-
-		void handle_cmd_queue_event();
-
-		void handle_msg_event();
+		std::string bind_addr_;
 
 		std::thread thread_;
 		std::atomic_bool is_stop_{ false };
@@ -91,10 +89,11 @@ namespace net
 		void *zmq_ctx_ = nullptr;
 		void *req_socket_ = nullptr;
 		void *socket_ = nullptr;
-		void *cmd_queue_inproc_ = nullptr;
-		void *monitor_ = nullptr;
+		void *cmd_socket_ = nullptr;
 
-		std::thread worker_;
+		std::thread sender_;
+		std::thread recevicer_;
+
 		cmd_queue msg_queue_;
 
 		std::map<uint64_t, void *> sockets_;

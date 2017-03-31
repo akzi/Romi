@@ -12,7 +12,10 @@ namespace romi
 		std::string engine_name_;
 		std::string nameserver_addr_ = "tcp://127.0.0.1:10095";
 		//nameserver is first engine in the cluster;
-		uint64_t nameserver_engine_id_ = 0;
+		uint64_t nameserver_engine_id_ = 1;
+		
+		uint64_t nameserver_actor_id_ = 1;
+
 		std::string net_bind_addr_ = "tcp://127.0.0.1:10096";
 		int net_heartbeart_interval = 1000;
 		//milliseconds

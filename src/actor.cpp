@@ -79,12 +79,17 @@ namespace romi
 	}
 
 
+	romi::addr actor::get_engine_addr()
+	{
+		addr engine_addr;
+		engine_addr.set_engine_id(addr_.engine_id());
+		engine_addr.set_actor_id(0);
+		return engine_addr;
+	}
+
 	void actor::connect(sys::net_connect &msg)
 	{
-		addr to;
-		to.set_engine_id(addr_.engine_id());
-		to.set_actor_id(0);
-		send(to, msg);
+		send(get_engine_addr(), msg);
 	}
 
 	void actor::init()

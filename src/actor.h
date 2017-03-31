@@ -30,6 +30,7 @@ namespace romi
 
 		addr get_addr();
 
+		addr get_engine_addr();
 		void connect(sys::net_connect &msg);
 	private:
 		virtual void init();

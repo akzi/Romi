@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup />
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\deps\protobuf\include;$(SolutionDir)..\..\..\deps\zeromq4-x\include;$(SolutionDir)..\..\..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\..\..\build\msvc\romi\x64\Debug;$(SolutionDir)..\..\..\deps\zeromq4-x\bin\x64;$(SolutionDir)..\..\..\deps\protobuf\cmake\build\solution\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libzmq_d.lib;ws2_32.lib;libprotobufd.lib;libprotobuf-lited.lib;romi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup />
+</Project>

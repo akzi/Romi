@@ -16,5 +16,6 @@ int main()
 
 	engine.spawn<romi::nameservice>();
 
+	getchar();
 	return 0;
 }

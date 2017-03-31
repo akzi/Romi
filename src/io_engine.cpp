@@ -3,8 +3,7 @@
 namespace romi
 {
 
-const char *io_engine_monitor_addr = "inproc://io_engine.monitor.ipc";
-const char *cmd_queue_inproc_addr = "inproc://cmd_queue.ipc";
+const char *inproc_addr = "inproc://cmd_queue.ipc";
 
 namespace net
 {
@@ -54,7 +53,7 @@ namespace net
 	void cmd_queue::init(void *zmq_ctx_)
 	{
 		socket_ = zmq_socket(zmq_ctx_, ZMQ_PAIR);
-		if (zmq_connect(socket_, cmd_queue_inproc_addr) == -1)
+		if (zmq_connect(socket_, inproc_addr) == -1)
 			throw std::runtime_error(zmq_strerror(errno));
 		zmq_msg_t msg;
 		zmq_msg_init_size(&msg, 1);
@@ -91,30 +90,7 @@ namespace net
 
 	void io_engine::bind(const std::string &addr)
 	{
-		socket_ = zmq_socket(zmq_ctx_, ZMQ_REP);
-		if (!socket_)
-			throw std::runtime_error(zmq_strerror(errno));
-		auto rc = zmq_bind(socket_, addr.c_str());
-		if (rc == -1)
-		{
-			zmq_close(socket_);
-			throw std::runtime_error(zmq_strerror(errno));
-		}
-
-		rc = zmq_socket_monitor(socket_, io_engine_monitor_addr, ZMQ_EVENT_ALL);
-		if (rc == -1)
-		{
-			zmq_close(socket_);
-			throw std::runtime_error(zmq_strerror(errno));
-		}
-		monitor_ = zmq_socket(zmq_ctx_, ZMQ_PAIR);
-		rc = zmq_connect(monitor_, io_engine_monitor_addr);
-		if (rc == -1)
-		{
-			zmq_close(socket_);
-			zmq_close(monitor_);
-			throw std::runtime_error(zmq_strerror(errno));
-		}
+		bind_addr_ = addr;
 	}
 
 	void io_engine::bind_send_msg(
@@ -136,55 +112,94 @@ namespace net
 
 	void io_engine::start()
 	{
-		thread_ = std::thread([this] {run(); });
-		thread_.detach();
+		start_subscriber();
+		start_publisher();
 	}
 
 	void io_engine::stop()
 	{
 		is_stop_ = true;
+		recevicer_.join();
+		sender_.join();
+	}
+	void io_engine::start_subscriber()
+	{
+		socket_ = zmq_socket(zmq_ctx_, ZMQ_REP);
+		if (!socket_)
+			throw std::runtime_error(zmq_strerror(errno));
+
+		auto rc = zmq_bind(socket_, bind_addr_.c_str());
+		if (rc == -1)
+		{
+			zmq_close(socket_);
+			throw std::runtime_error(zmq_strerror(errno));
+		}
+
+		int timeout = 100;
+		rc = zmq_setsockopt(socket_, ZMQ_RCVTIMEO, &timeout, sizeof(timeout));
+		if (rc == -1)
+		{
+			zmq_close(socket_);
+			throw std::runtime_error("zmq_setsockopt failed");
+		}
+
+		zmq_msg_t msg;
+		zmq_msg_init(&msg);
+		while (is_stop_ == false)
+		{
+			if (zmq_recvmsg(socket_, &msg, 0) == -1)
+			{
+				if (errno == EAGAIN)
+					continue;
+				std::cout << zmq_strerror(errno) << std::endl;
+			}
+			try
+			{
+				handle_msg_(zmq_msg_data(&msg), zmq_msg_size(&msg));
+			}
+			catch (const std::exception& e)
+			{
+				std::cout << e.what() << std::endl;
+			}
+		}
+		zmq_msg_close(&msg);
 	}
 
-	void io_engine::run()
+
+	void io_engine::start_publisher()
 	{
-		do
-		{
-			zmq_pollitem_t pollitem[3] = {
-				{ socket_, 0, ZMQ_POLLIN, 0 },
-				{ cmd_queue_inproc_, 0, ZMQ_POLLIN, 0 },
-				{ monitor_, 0, ZMQ_POLLIN, 0}
-			};
+	
+		int timeout = 100;
+		int rc = zmq_setsockopt(socket_, ZMQ_RCVTIMEO, &timeout, sizeof(timeout));
+		if (rc == -1)
+			throw std::runtime_error("zmq_setsockopt failed");
 
-			switch (zmq_poll(&pollitem[0], 3, 10))
+		sender_ = std::thread([this] {
+			
+			while (is_stop_ == false)
 			{
-			case 0:
-				continue;
-			case -1:
-				std::cout << zmq_strerror(errno) << std::endl;
-				return;
-			default:
-				if (pollitem[0].revents | ZMQ_POLLIN)
-				{
-					handle_msg_event();
-				}
-				else if (pollitem[1].revents | ZMQ_POLLIN)
-				{
-					handle_cmd_queue_event();
-				}
-				else if (pollitem[2].revents | ZMQ_POLLIN)
-				{
-					handle_monitor_event();
-				}
-			}
+				zmq_msg_t msg;
+				zmq_msg_init(&msg);
 
-		} while (is_stop_ == false);
+				int rc = zmq_recvmsg(cmd_socket_, &msg, 0);
+				if (rc == -1)
+				{
+					if(errno == EAGAIN)
+						continue;
+					throw std::runtime_error(zmq_strerror(errno));
+				}
+				zmq_msg_close(&msg);
+				process_msg();
+			}
+		});
+		
 	}
 
 	void io_engine::init()
 	{
 		zmq_ctx_ = zmq_init(1);
-		cmd_queue_inproc_ = zmq_socket(zmq_ctx_, ZMQ_PAIR);
-		if (zmq_bind(cmd_queue_inproc_, cmd_queue_inproc_addr ) == -1)
+		cmd_socket_ = zmq_socket(zmq_ctx_, ZMQ_PAIR);
+		if (zmq_bind(cmd_socket_, inproc_addr ) == -1)
 			throw std::runtime_error(zmq_strerror(errno));
 		msg_queue_.init(zmq_ctx_);
 	}
@@ -207,9 +222,7 @@ namespace net
 		auto engine_id = _msg.net_connect_->engine_id();
 		auto remote_addr = _msg.net_connect_->remote_addr();
 		addr to = _msg.net_connect_->from();
-		addr from;
-		from.set_engine_id(0);
-		from.set_actor_id(0);
+
 		sys::net_connect_notify notify;
 		notify.set_connected(false);
 
@@ -220,7 +233,7 @@ namespace net
 			notify.set_connected(true);
 		}
 		notify.mutable_net_connect()->CopyFrom(*_msg.net_connect_);
-		send_msg_(make_message(from, to, notify));
+		send_msg_(make_message(to, to, notify));
 	}
 
 	void io_engine::do_send(command &_msg)
@@ -230,13 +243,10 @@ namespace net
 		const auto itr = sockets_.find(engine_id);
 		if (itr == sockets_.end())
 		{
-			addr from;
 			sys::net_not_engine_id not_engine_id;
 
-			from.set_actor_id(0);
-			from.set_engine_id(message->from().engine_id());
 			not_engine_id.mutable_addr()->CopyFrom(message->to());
-			send_msg_(make_message(from, message->from(), not_engine_id));
+			send_msg_(make_message(message->from(), message->from(), not_engine_id));
 			return;
 		}
 		auto buffer = message->serialize_as_string();
@@ -255,73 +265,15 @@ namespace net
 			switch (cmd.type_)
 			{
 			case command::e_net_connect:
-				return do_connect(std::move(cmd));
+				do_connect(std::move(cmd));
+				break;
 			case command::e_send_msg:
-				return do_send(std::move(cmd));
+				do_send(std::move(cmd));
+				break;
 			default:
 				break;
 			}
 		}
-	}
-	void io_engine::handle_monitor_event()
-	{
-		std::string addr;
-		zmq_msg_t msg;
-		zmq_msg_init(&msg);
-		if (zmq_recvmsg(monitor_, &msg, 0) == -1)
-		{
-			std::cout << zmq_strerror(errno) << std::endl;
-			return;
-		}
-
-		uint8_t *data = (uint8_t *)zmq_msg_data(&msg);
-		uint16_t event = *(uint16_t *)(data);
-		uint32_t value = *(uint32_t *)(data + 2);
-
-		
-		if (zmq_msg_init(&msg) == -1||
-			zmq_msg_recv(&msg, monitor_, 0) == -1)
-		{
-			std::cout << zmq_strerror(errno) << std::endl;
-			return;
-		}
-		data = (uint8_t*)zmq_msg_data(&msg);
-		size_t size = zmq_msg_size(&msg);
-		addr.append((char*)data, size);
-
-		std::cout << addr.c_str() << " event:" << event
-			<< " value:" << value << std::endl;
-	}
-
-	void io_engine::handle_cmd_queue_event()
-	{
-		zmq_msg_t msg;
-		zmq_msg_init(&msg);
-		int rc = zmq_recvmsg(cmd_queue_inproc_, &msg, 0);
-		assert(rc != -1);
-		assert(*(char*)zmq_msg_data(&msg) == 'K');
-		zmq_msg_close(&msg);
-		process_msg();
-	}
-
-	void io_engine::handle_msg_event()
-	{
-		zmq_msg_t msg;
-		zmq_msg_init(&msg);
-
-		if (zmq_recvmsg(socket_, &msg, 0) == -1)
-		{
-			std::cout << zmq_strerror(errno) << std::endl;
-		}
-		try
-		{
-			handle_msg_(zmq_msg_data(&msg), zmq_msg_size(&msg));
-		}
-		catch (const std::exception& e)
-		{
-			std::cout << e.what() << std::endl;
-		}
-		zmq_msg_close(&msg);
 	}
 }
 }

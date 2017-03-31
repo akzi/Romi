@@ -27,8 +27,15 @@ struct user:romi::actor
 	
 	bool val_;
 };
-int actor_receivce()
+int main()
 {
+
+	romi::net::io_engine io_engine;
+
+
+	io_engine.bind("tcp://0.0.0.0:9901");
+	io_engine.start();
+
 	romi::engine engine;
 
 	romi::config config;

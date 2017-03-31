@@ -15,7 +15,72 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\src\engine.cpp">
+    <ClInclude Include="..\..\..\src\function_traits.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\impl.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\io_engine.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\lock_queue.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\message.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\message_builder.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\romi.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\romi.pb.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\romi.sys.pb.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\timer.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\actor.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\addr_less.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\config.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dispatcher.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dispatcher_pool.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\engine.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\exceptions.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\io_engine.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\romi.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\romi.pb.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\romi.sys.pb.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\timer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\actor.cpp">
@@ -27,77 +92,8 @@
     <ClCompile Include="..\..\..\src\dispatcher_pool.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\timer.cpp">
+    <ClCompile Include="..\..\..\src\engine.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\romi.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\romi.sys.pb.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\romi.pb.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\io_engine.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\..\src\romi.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\engine.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\impl.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\message.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\addr_less.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\actor.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\exceptions.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\message_builder.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\config.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\lock_queue.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\dispatcher.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\dispatcher_pool.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\timer.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\function_traits.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\romi.pb.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\romi.sys.pb.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\io_engine.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\..\proto\romi.proto" />
-    <None Include="..\..\..\proto\romi.sys.proto" />
   </ItemGroup>
 </Project>

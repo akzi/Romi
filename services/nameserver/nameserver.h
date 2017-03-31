@@ -1,12 +1,12 @@
 #pragma once
 namespace romi
 {
-	class nameservice :public actor
+	class nameserver :public actor
 	{
 	public:
-		nameservice();
+		nameserver();
 
-		~nameservice();
+		~nameserver();
 
 	private:
 

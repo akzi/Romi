@@ -1,5 +1,5 @@
 #include "romi.hpp"
-#include "nameservice.h"
+#include "nameserver.h"
 
 
 int main()
@@ -14,7 +14,7 @@ int main()
 	engine.set_config(config);
 	engine.start();
 
-	engine.spawn<romi::nameservice>();
+	engine.spawn<romi::nameserver>();
 
 	getchar();
 	return 0;

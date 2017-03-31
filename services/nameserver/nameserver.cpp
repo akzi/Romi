@@ -1,25 +1,25 @@
 #include "romi.hpp"
-#include "nameservice.h"
+#include "nameserver.h"
 
 namespace romi
 {
-	nameservice::nameservice()
+	nameserver::nameserver()
 	{
 
 	}
 
-	nameservice::~nameservice()
+	nameserver::~nameserver()
 	{
 
 	}
 
-	void nameservice::regist_actor(const actor_info & info)
+	void nameserver::regist_actor(const actor_info & info)
 	{
 		actor_names_[info.name()] = info;
 	}
 
 
-	void nameservice::unregist_actor(const addr& _addr)
+	void nameserver::unregist_actor(const addr& _addr)
 	{
 		for(auto itr = actor_names_.begin(); itr != actor_names_.end(); ++itr)
 		{
@@ -31,7 +31,7 @@ namespace romi
 		}
 	}
 
-	bool nameservice::find_actor(const std::string & name, actor_info &info)
+	bool nameserver::find_actor(const std::string & name, actor_info &info)
 	{
 		auto itr = actor_names_.find(name);
 		if (itr != actor_names_.end())
@@ -42,12 +42,12 @@ namespace romi
 		return false;
 	}
 
-	void nameservice::regist_engine(const engine_info &engine)
+	void nameserver::regist_engine(const engine_info &engine)
 	{
 		engine_map_[engine.name()] = engine;
 	}
 
-	bool nameservice::find_engine(const std::string &name, engine_info &engine)
+	bool nameserver::find_engine(const std::string &name, engine_info &engine)
 	{
 		auto itr = engine_map_.find(name);
 		if (itr != engine_map_.end())
@@ -58,7 +58,7 @@ namespace romi
 		return false;
 	}
 
-	bool nameservice::find_engine(uint64_t id, engine_info &engine)
+	bool nameserver::find_engine(uint64_t id, engine_info &engine)
 	{
 		for (auto &itr : engine_map_)
 		{
@@ -69,14 +69,14 @@ namespace romi
 		return false;
 	}
 
-	uint64_t nameservice::unique_id()
+	uint64_t nameserver::unique_id()
 	{
 		next_engine_id_++;
 		return std::chrono::high_resolution_clock::now()
 			.time_since_epoch().count() + next_engine_id_;
 	}
 
-	void nameservice::init()
+	void nameserver::init()
 	{
 		std::cout << "nameservice init." << std::endl;
 
@@ -146,7 +146,7 @@ namespace romi
 		});
 	}
 
-	void nameservice::connect_engine(const ::romi::engine_info& engine_info)
+	void nameserver::connect_engine(const ::romi::engine_info& engine_info)
 	{
 		sys::net_connect msg;
 		msg.mutable_from()->CopyFrom(get_addr());
@@ -156,7 +156,7 @@ namespace romi
 		connect(msg);
 	}
 
-	void nameservice::get_engine_list(sys::get_engine_list_resp &resp)
+	void nameserver::get_engine_list(sys::get_engine_list_resp &resp)
 	{
 		for (auto &itr : engine_map_)
 		{

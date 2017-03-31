@@ -87,6 +87,11 @@ namespace romi
 		return engine_addr;
 	}
 
+	romi::addr actor::get_nameserver_addr()
+	{
+		return nameserver_addr_;
+	}
+
 	void actor::connect(sys::net_connect &msg)
 	{
 		send(get_engine_addr(), msg);

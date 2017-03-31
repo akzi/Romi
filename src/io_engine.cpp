@@ -1,4 +1,5 @@
 #include "romi.hpp"
+#include "zmq.h"
 
 namespace romi
 {
@@ -11,9 +12,11 @@ namespace net
 	{
 		if (&other == this)
 			return *this;
-		this->~command();
-		memcpy(this, &other, sizeof(command));
-		memset(&other, 0, sizeof(command));
+		reset();
+		type_ = other.type_;
+		net_connect_ = other.net_connect_;
+		send_msg_ = other.send_msg_;
+		other.type_ = command::e_null;
 		return *this;
 	}
 
@@ -28,6 +31,12 @@ namespace net
 	}
 
 	command::~command()
+	{
+		reset();
+	}
+
+
+	void command::reset()
 	{
 		switch (type_)
 		{
@@ -55,9 +64,6 @@ namespace net
 		socket_ = zmq_socket(zmq_ctx_, ZMQ_PAIR);
 		if (zmq_connect(socket_, inproc_addr) == -1)
 			throw std::runtime_error(zmq_strerror(errno));
-		zmq_msg_t msg;
-		zmq_msg_init_size(&msg, 1);
-		*reinterpret_cast<char*>(zmq_msg_data(&msg)) = 'K';
 	}
 
 	void cmd_queue::push_back(command &&_msg)
@@ -75,7 +81,7 @@ namespace net
 
 	void cmd_queue::notify()
 	{
-		std::lock_guard<std::mutex> locker(socket_mutex_);
+		std::lock_guard<std::mutex> locker(mutex_);
 		if (zmq_send(socket_, "K", 1, 0) == -1)
 		{
 			throw std::runtime_error(zmq_strerror(errno));
@@ -85,7 +91,13 @@ namespace net
 	//io_engine
 	io_engine::io_engine()
 	{
-		init();
+		zmq_ctx_ = zmq_init(1);
+	}
+
+
+	io_engine::~io_engine()
+	{
+		zmq_term(zmq_ctx_);
 	}
 
 	void io_engine::bind(const std::string &addr)
@@ -112,8 +124,23 @@ namespace net
 
 	void io_engine::start()
 	{
-		start_subscriber();
-		start_publisher();
+		std::mutex mutex_;
+		std::condition_variable cv_;
+
+		std::unique_lock<std::mutex> locker(mutex_);
+
+		recevicer_ = std::thread([&] {
+			start_recevicer([&] {
+				cv_.notify_one();
+			});
+		});
+		cv_.wait(locker);
+		sender_ = std::thread([&] {
+			start_sender([&] {
+				cv_.notify_one();
+			});
+		});
+		cv_.wait(locker);
 	}
 
 	void io_engine::stop()
@@ -122,36 +149,37 @@ namespace net
 		recevicer_.join();
 		sender_.join();
 	}
-	void io_engine::start_subscriber()
+	void io_engine::start_recevicer(std::function<void()> init_done)
 	{
-		socket_ = zmq_socket(zmq_ctx_, ZMQ_REP);
-		if (!socket_)
+		auto socket = zmq_socket(zmq_ctx_, ZMQ_PULL);
+		if (!socket)
 			throw std::runtime_error(zmq_strerror(errno));
 
-		auto rc = zmq_bind(socket_, bind_addr_.c_str());
+		auto rc = zmq_bind(socket, bind_addr_.c_str());
 		if (rc == -1)
 		{
-			zmq_close(socket_);
+			zmq_close(socket);
 			throw std::runtime_error(zmq_strerror(errno));
 		}
 
-		int timeout = 100;
-		rc = zmq_setsockopt(socket_, ZMQ_RCVTIMEO, &timeout, sizeof(timeout));
+		int val = 100;
+		rc = zmq_setsockopt(socket, ZMQ_RCVTIMEO, &val, sizeof(val));
 		if (rc == -1)
 		{
-			zmq_close(socket_);
+			zmq_close(socket);
 			throw std::runtime_error("zmq_setsockopt failed");
 		}
-
+		init_done();
 		zmq_msg_t msg;
 		zmq_msg_init(&msg);
 		while (is_stop_ == false)
 		{
-			if (zmq_recvmsg(socket_, &msg, 0) == -1)
+			if (zmq_recvmsg(socket, &msg, 0) == -1)
 			{
 				if (errno == EAGAIN)
 					continue;
 				std::cout << zmq_strerror(errno) << std::endl;
+
 			}
 			try
 			{
@@ -163,50 +191,45 @@ namespace net
 			}
 		}
 		zmq_msg_close(&msg);
+		zmq_close(zmq_ctx_);
 	}
 
 
-	void io_engine::start_publisher()
+	void io_engine::start_sender(std::function<void()> init_done)
 	{
-	
-		int timeout = 100;
-		int rc = zmq_setsockopt(socket_, ZMQ_RCVTIMEO, &timeout, sizeof(timeout));
-		if (rc == -1)
-			throw std::runtime_error("zmq_setsockopt failed");
-
-		sender_ = std::thread([this] {
-			
-			while (is_stop_ == false)
-			{
-				zmq_msg_t msg;
-				zmq_msg_init(&msg);
-
-				int rc = zmq_recvmsg(cmd_socket_, &msg, 0);
-				if (rc == -1)
-				{
-					if(errno == EAGAIN)
-						continue;
-					throw std::runtime_error(zmq_strerror(errno));
-				}
-				zmq_msg_close(&msg);
-				process_msg();
-			}
-		});
-		
-	}
-
-	void io_engine::init()
-	{
-		zmq_ctx_ = zmq_init(1);
-		cmd_socket_ = zmq_socket(zmq_ctx_, ZMQ_PAIR);
-		if (zmq_bind(cmd_socket_, inproc_addr ) == -1)
+		auto socket = zmq_socket(zmq_ctx_, ZMQ_PAIR);
+		if (zmq_bind(socket, inproc_addr) == -1)
 			throw std::runtime_error(zmq_strerror(errno));
 		msg_queue_.init(zmq_ctx_);
+
+		int val = 100;
+		int rc = zmq_setsockopt(socket, ZMQ_RCVTIMEO, &val, sizeof(val));
+		if (rc == -1)
+			throw std::runtime_error("zmq_setsockopt failed");
+		
+		init_done();
+
+		zmq_msg_t msg;
+		zmq_msg_init(&msg);
+
+		while (is_stop_ == false)
+		{
+			int rc = zmq_recvmsg(socket, &msg, 0);
+			if (rc == -1)
+			{
+				if (errno == EAGAIN)
+					continue;
+				throw std::runtime_error(zmq_strerror(errno));
+			}
+			process_msg();
+		}
+		zmq_msg_close(&msg);
+		zmq_close(socket);
 	}
 
 	io_engine::socket io_engine::connect(std::string remote_addr)
 	{
-		auto socket_ = zmq_socket(zmq_ctx_, ZMQ_REQ);
+		auto socket_ = zmq_socket(zmq_ctx_, ZMQ_PUSH);
 		if (!socket_)
 			throw std::runtime_error(zmq_strerror(errno));
 		if (zmq_connect(socket_, remote_addr.c_str()) == -1)
@@ -243,10 +266,10 @@ namespace net
 		const auto itr = sockets_.find(engine_id);
 		if (itr == sockets_.end())
 		{
-			sys::net_not_engine_id not_engine_id;
+			sys::net_not_engine_id notify;
 
-			not_engine_id.mutable_addr()->CopyFrom(message->to());
-			send_msg_(make_message(message->from(), message->from(), not_engine_id));
+			notify.mutable_addr()->CopyFrom(message->to());
+			send_msg_(make_message(message->from(), message->from(), notify));
 			return;
 		}
 		auto buffer = message->serialize_as_string();

@@ -111,5 +111,7 @@ namespace romi
 		net::io_engine io_engine_;
 
 		std::map<std::string, msg_process_handle> msg_handles_;
+
+		bool regist_engine_ = false;
 	};
 }

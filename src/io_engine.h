@@ -30,6 +30,8 @@ namespace net
 			sys::net_connect *net_connect_;
 			sys::send_msg *send_msg_;
 		};
+	private:
+		void reset();
 	};
 
 	class cmd_queue
@@ -43,7 +45,7 @@ namespace net
 		void notify();
 
 		void *socket_ = nullptr;
-		std::mutex socket_mutex_;
+		std::mutex mutex_;
 		lock_queue<command> msg_queue_;
 	};
 
@@ -52,7 +54,10 @@ namespace net
 	{
 	public:
 		using socket = void*;
+		
 		io_engine();
+
+		~io_engine();
 
 		void bind(const std::string &addr);
 
@@ -67,11 +72,9 @@ namespace net
 		void stop();
 
 	private:
-		void start_subscriber();
+		void start_recevicer(std::function<void()>);
 
-		void start_publisher();
-
-		void init();
+		void start_sender(std::function<void()>);
 
 		socket connect(std::string remote_addr);
 
@@ -83,13 +86,9 @@ namespace net
 
 		std::string bind_addr_;
 
-		std::thread thread_;
 		std::atomic_bool is_stop_{ false };
 
 		void *zmq_ctx_ = nullptr;
-		void *req_socket_ = nullptr;
-		void *socket_ = nullptr;
-		void *cmd_socket_ = nullptr;
 
 		std::thread sender_;
 		std::thread recevicer_;
@@ -99,6 +98,8 @@ namespace net
 		std::map<uint64_t, void *> sockets_;
 		std::function<void(message_base::ptr&&)> send_msg_;
 		std::function<void(void*, std::size_t)> handle_msg_;
+
+		//
 	};
 }
 }

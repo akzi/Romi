@@ -31,6 +31,9 @@ namespace romi
 		addr get_addr();
 
 		addr get_engine_addr();
+
+		addr get_nameserver_addr();
+
 		void connect(sys::net_connect &msg);
 	private:
 		virtual void init();
@@ -54,6 +57,9 @@ namespace romi
 		using msg_process_handle = std::function<void(const message_base::ptr& )>;
 
 		addr addr_;
+
+		addr nameserver_addr_;
+
 		lock_queue<message_base::ptr> msg_queue_;
 
 		std::map<std::string, msg_process_handle> msg_handles_;

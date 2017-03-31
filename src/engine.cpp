@@ -41,6 +41,26 @@ namespace romi
 		REGIST_MESSAGE_BUILDER(sys::ping);
 		REGIST_MESSAGE_BUILDER(sys::pong);
 		REGIST_MESSAGE_BUILDER(sys::engine_offline);
+		REGIST_MESSAGE_BUILDER(sys::regist_actor_req);
+		REGIST_MESSAGE_BUILDER(sys::regist_actor_resp);
+		REGIST_MESSAGE_BUILDER(sys::regist_actor_resp);
+		REGIST_MESSAGE_BUILDER(sys::net_connect);
+		REGIST_MESSAGE_BUILDER(sys::net_connect_notify);
+		REGIST_MESSAGE_BUILDER(sys::net_not_actor);
+		REGIST_MESSAGE_BUILDER(sys::net_not_engine_id);
+		REGIST_MESSAGE_BUILDER(sys::engine_offline);
+		REGIST_MESSAGE_BUILDER(sys::timer_expire);
+		REGIST_MESSAGE_BUILDER(sys::add_watcher);
+		REGIST_MESSAGE_BUILDER(sys::del_watcher);
+		REGIST_MESSAGE_BUILDER(sys::actor_close);
+		REGIST_MESSAGE_BUILDER(sys::regist_engine_req);
+		REGIST_MESSAGE_BUILDER(sys::regist_engine_resp);
+		REGIST_MESSAGE_BUILDER(sys::get_engine_list_req);
+		REGIST_MESSAGE_BUILDER(sys::get_engine_list_resp);
+		REGIST_MESSAGE_BUILDER(sys::regist_actor_req);
+		REGIST_MESSAGE_BUILDER(sys::regist_actor_resp);
+		REGIST_MESSAGE_BUILDER(sys::find_actor_req);
+		REGIST_MESSAGE_BUILDER(sys::find_actor_resp);
 	}
 
 	void engine::init_message_handle()
@@ -165,6 +185,8 @@ namespace romi
 		};
 		_actor->addr_.set_actor_id(gen_actor_id());
 		_actor->addr_.set_engine_id(engine_id_);
+		_actor->nameserver_addr_.set_engine_id(config_.nameserver_engine_id_);
+		_actor->nameserver_addr_.set_actor_id(config_.nameserver_actor_id_);
 
 		_actor->set_timer_ = [this](
 			addr _addr, std::size_t _delay, timer_id id) 
@@ -234,6 +256,18 @@ namespace romi
 
 	void engine::handle_net_msg(message_base::ptr &msg)
 	{
+		if (regist_engine_)
+		{
+			if (get_message_type<sys::regist_engine_resp>() == msg->type())
+			{
+				if (auto handle = find_msg_handle(msg->type()))
+				{
+					regist_engine_ = false;
+					handle(msg);
+					return;
+				}
+			}
+		}
 		send(std::move(msg));
 	}
 
@@ -363,13 +397,14 @@ namespace romi
 
 	void engine::regist_engine()
 	{
+		regist_engine_ = true;
 		if (config_.engine_name_.empty())
 			throw std::runtime_error("config::engine_name_ empty.");
 
 		std::promise<sys::regist_engine_resp> resp_promise;
 		auto futrue = resp_promise.get_future();
 
-		regist_msg_handle(get_message_type<sys::regist_actor_resp>(),
+		regist_msg_handle(get_message_type<sys::regist_engine_resp>(),
 			[&](const message_base::ptr &ptr) {
 			try
 			{
@@ -386,7 +421,6 @@ namespace romi
 		});
 
 		connect(config_.nameserver_engine_id_, config_.nameserver_addr_);
-
 		
 		sys::regist_engine_req req;
 		req.mutable_engine_info()->set_addr(config_.net_bind_addr_);
@@ -409,9 +443,8 @@ namespace romi
 			auto resp = futrue.get();
 			if (!resp.result())
 				throw std::runtime_error("regist_engine_req failed");
-
 			engine_id_ = resp.engine_id();
-			unregist_msg_handle(get_message_type<sys::regist_engine_resp>());
+			std::cout << "regist_engine ok. engine_id " << engine_id_ << std::endl;
 		}
 		catch (std::exception&e)
 		{
@@ -419,6 +452,7 @@ namespace romi
 			unregist_msg_handle(get_message_type<sys::regist_engine_resp>());
 			throw;
 		}
+		unregist_msg_handle(get_message_type<sys::regist_engine_resp>());
 	}
 
 	engine::msg_process_handle engine::find_msg_handle(std::string &type)

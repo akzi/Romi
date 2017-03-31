@@ -18,8 +18,6 @@
 #include "romi.pb.h"
 #include "romi.sys.pb.h"
 
-#include "zmq.h"
-
 #include "addr_less.hpp"
 #include "exceptions.hpp"
 #include "function_traits.hpp"

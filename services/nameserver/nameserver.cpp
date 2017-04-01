@@ -80,17 +80,20 @@ namespace romi
 	{
 		std::cout << "nameservice init." << std::endl;
 
-		receivce([this](const addr &, const sys::net_connect_notify &notify) {
+		receivce([this](const addr &, const sys::net_connect_notify &notify) 
+		{
 
 			std::cout << "connect to "<<notify.net_connect().remote_addr() << std::endl;
 		});
 
-		receivce([this](const addr &from, const sys::actor_close &msg) {
+		receivce([this](const addr &from, const sys::actor_close &msg) 
+		{
 
 			unregist_actor(msg.addr());
 		});
 
-		receivce([this](const addr &from, const sys::regist_actor_req &req) {
+		receivce([this](const addr &from, const sys::regist_actor_req &req) 
+		{
 		
 			sys::regist_actor_resp resp;
 			auto info = req.actor_info();
@@ -103,7 +106,8 @@ namespace romi
 			send(from, resp);
 		});
 
-		receivce([this](const addr &from, const sys::regist_engine_req &req) {
+		receivce([this](const addr &from, const sys::regist_engine_req &req) 
+		{
 
 			sys::regist_engine_resp resp;
 			auto info = req.engine_info();
@@ -124,7 +128,8 @@ namespace romi
 			send(to, resp);
 		});
 
-		receivce([this](const addr &from, const sys::find_actor_req &req) {
+		receivce([this](const addr &from, const sys::find_actor_req &req) 
+		{
 
 			actor_info info;
 			sys::find_actor_resp resp;
@@ -137,7 +142,8 @@ namespace romi
 			send(from, resp);
 		});
 
-		receivce([this](const addr &from, const sys::get_engine_list_req&) {
+		receivce([this](const addr &from, const sys::get_engine_list_req&) 
+		{
 
 			sys::get_engine_list_resp resp;
 			get_engine_list(resp);

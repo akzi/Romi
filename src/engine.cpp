@@ -16,7 +16,8 @@ namespace romi
 	}
 	void engine::init_io_engine()
 	{
-		io_engine_.bind_handle_net_msg([this](void* data, std::size_t len) {
+		io_engine_.bind_handle_net_msg([this](void* data, std::size_t len) 
+		{
 			uint8_t *ptr = (uint8_t *)data;
 			auto msg_type = decode_string(ptr);
 			auto handle = message_builder::instance().
@@ -67,8 +68,8 @@ namespace romi
 	{
 		//
 		regist_msg_handle(get_message_type<sys::ping>(),
-			[this](const message_base::ptr &msg) {
-
+			[this](const message_base::ptr &msg) 
+		{
 			if (msg->type() == get_message_type<sys::ping>())
 			{
 				return resp_pong(msg);
@@ -76,8 +77,8 @@ namespace romi
 		});
 
 		regist_msg_handle(get_message_type<sys::pong>(),
-			[this](const message_base::ptr &msg) {
-
+			[this](const message_base::ptr &msg) 
+		{
 			if (const auto ptr = msg->get<sys::pong>())
 			{
 				handle_pong(msg);
@@ -85,7 +86,8 @@ namespace romi
 		});
 
 		regist_msg_handle(get_message_type<sys::net_connect>(), 
-			[this](const message_base::ptr &ptr) {
+			[this](const message_base::ptr &ptr) 
+		{
 			if (const auto msg = ptr->get<sys::net_connect>())
 			{
 				net::command cmd;
@@ -377,6 +379,7 @@ namespace romi
 					}
 				}
 			}
+
 		} while (false);
 
 		for (auto &itr: timeout_list_)
@@ -418,7 +421,8 @@ namespace romi
 		auto futrue = resp_promise.get_future();
 
 		regist_msg_handle(get_message_type<sys::regist_engine_resp>(),
-			[&](const message_base::ptr &ptr) {
+			[&](const message_base::ptr &ptr) 
+		{
 			try
 			{
 				auto msg = ptr->get<sys::regist_engine_resp>();

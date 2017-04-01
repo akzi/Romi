@@ -1,10 +1,6 @@
 #include "romi.hpp"
 #include "zmq.h"
 
-#define EVENT_TO_STR(EVENT,value)\
-		if (EVENT == value)\
-			return #EVENT;
-
 namespace romi
 {
 namespace net
@@ -219,9 +215,8 @@ namespace net
 
 		
 		int rc = zmq_setsockopt(socket, ZMQ_RCVTIMEO, &val, sizeof(val));
-		if (rc == -1)
-			throw std::runtime_error("zmq_setsockopt failed");
-		
+		assert(!rc);
+
 		init_done();
 
 		zmq_msg_t msg;
@@ -255,14 +250,10 @@ namespace net
 		if (rc == -1 && zmq_errno() == ETERM)
 			return false;
 
-		assert(rc != -1);
-		assert(zmq_msg_more(&msg1) != 0);
 		rc = zmq_msg_recv(&msg2, socket, 0);
 		if (rc == -1 && zmq_errno() == ETERM)
 			return false;
 
-		assert(rc != -1);
-		assert(zmq_msg_more(&msg2) == 0);
 		const char* data = (char*)zmq_msg_data(&msg1);
 		memcpy(&event.event, data, sizeof(event.event));
 		memcpy(&event.value, data + sizeof(event.event), sizeof(event.value));
@@ -277,6 +268,7 @@ namespace net
 
 	const char *event_to_str(int event)
 	{
+#define EVENT_TO_STR(EVENT,VALUE) if (EVENT == VALUE) return #EVENT;
 
 		EVENT_TO_STR(ZMQ_EVENT_CONNECTED, event);
 		EVENT_TO_STR(ZMQ_EVENT_CONNECT_DELAYED, event);
@@ -290,7 +282,7 @@ namespace net
 		EVENT_TO_STR(ZMQ_EVENT_DISCONNECTED, event);
 		EVENT_TO_STR(ZMQ_EVENT_MONITOR_STOPPED, event);
 		
-		return "";
+		return "Unkown event";
 	}
 	void io_engine::start_monitor(std::function<void()> init_done, const char *addr_)
 	{
@@ -301,11 +293,13 @@ namespace net
 			zmq_close(socket);
 			throw std::runtime_error(zmq_strerror(errno));
 		}
+		
 		init_done();
-		zmq_event_t event;
-		std::string remote_addr;
+
 		while (is_stop_ == false )
 		{
+			zmq_event_t event;
+			std::string remote_addr;
 			if (read_msg(socket, event, remote_addr) == false)
 				break;
 			std::string info = remote_addr + " "+ event_to_str(event.event) \

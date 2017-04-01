@@ -178,7 +178,8 @@ namespace romi
 	void actor::init_msg_process_handle()
 	{
 		msg_handles_.emplace(get_message_type<sys::timer_expire>(),
-			[this](const message_base::ptr& msg) {
+			[this](const message_base::ptr& msg) 
+		{
 			if (const auto ptr = msg->get<sys::timer_expire>())
 			{
 				timer_expire(ptr->timer_id());
@@ -186,8 +187,8 @@ namespace romi
 		});
 
 		msg_handles_.emplace(get_message_type<sys::add_watcher>(),
-			[this](const message_base::ptr& msg) {
-
+			[this](const message_base::ptr& msg) 
+		{
 			if (const auto ptr = msg->get<sys::add_watcher>())
 			{
 				observers_.insert(ptr->addr());
@@ -195,8 +196,8 @@ namespace romi
 		});
 
 		msg_handles_.emplace(get_message_type<sys::del_watcher>(), 
-			[this](const message_base::ptr& msg) {
-
+			[this](const message_base::ptr& msg) 
+		{
 			if (const auto ptr = msg->get<sys::del_watcher>())
 			{
 				observers_.erase(ptr->addr());
@@ -204,12 +205,15 @@ namespace romi
 		});
 
 		msg_handles_.emplace(get_message_type<sys::engine_offline>(), 
-			[this](const message_base::ptr& msg) {
+			[this](const message_base::ptr& msg) 
+		{
 
 			auto &handle = msg_handles_[get_message_type<sys::actor_close>()];
 			if (!handle)
-				throw std::runtime_error("not find sys::actor_close msg handle");
-
+			{
+				std::cout << "not find sys::actor_close msg handle" << std::endl;
+				return;
+			}
 			if (const auto ptr = msg->get<sys::engine_offline>())
 			{
 				sys::actor_close event;
@@ -224,11 +228,20 @@ namespace romi
 			}
 		});
 		msg_handles_.emplace(get_message_type<sys::actor_init>(),
-			[this](const message_base::ptr& msg) {
-
+			[this](const message_base::ptr& msg) 
+		{
 			if (msg->get<sys::actor_init>())
 			{
 				init();
+			}
+
+		});
+		msg_handles_.emplace(get_message_type<sys::pong>(),
+			[this](const message_base::ptr &ptr) 
+		{
+			if (const auto msg = ptr->get<sys::ping>())
+			{
+				send(ptr->from(), sys::pong{});
 			}
 		});
 	}

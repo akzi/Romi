@@ -271,19 +271,18 @@ namespace romi
 
 	void engine::handle_net_msg(message_base::ptr &msg)
 	{
-		if (regist_engine_)
+		if (!regist_engine_)
+			return send(std::move(msg));
+
+		if (get_message_type<sys::regist_engine_resp>() == msg->type())
 		{
-			if (get_message_type<sys::regist_engine_resp>() == msg->type())
+			if (auto handle = find_msg_handle(msg->type()))
 			{
-				if (auto handle = find_msg_handle(msg->type()))
-				{
-					regist_engine_ = false;
-					handle(msg);
-					return;
-				}
+				regist_engine_ = false;
+				handle(msg);
+				return;
 			}
 		}
-		send(std::move(msg));
 	}
 
 	void engine::send_to_net(message_base::ptr &message_)

@@ -72,7 +72,7 @@ namespace net
 		void stop();
 
 	private:
-		void start_recevicer(std::function<void()>, const char *addr_);
+		void start_receiver(std::function<void()>, const char *addr_);
 
 		void start_monitor(std::function<void()>, const char *addr_);
 
@@ -95,7 +95,7 @@ namespace net
 		void *zmq_ctx_ = nullptr;
 
 		std::thread sender_;
-		std::thread recevicer_;
+		std::thread receiver_;
 		std::thread monitor_;
 
 		cmd_queue msg_queue_;

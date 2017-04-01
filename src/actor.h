@@ -11,7 +11,7 @@ namespace romi
 		virtual ~actor();
 
 		template<typename Handle>
-		void receivce(Handle handle);
+		void receive(Handle handle);
 
 		template<typename T>
 		void send(const addr &to, T &&obj);
@@ -55,7 +55,7 @@ namespace romi
 		std::size_t receive_msg(message_base::ptr &&msg);
 
 		template<typename Message>
-		inline void receivce_help(std::function<void(const addr&, const Message &)>);
+		inline void receive_help(std::function<void(const addr&, const Message &)>);
 
 		friend class engine;
 		friend class dispatcher;

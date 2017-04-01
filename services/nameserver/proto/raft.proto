@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package romi.raft;
+
+message vote_request
+{
+	int64 term = 1;
+	string candidate = 2;
+	int64 last_log_index = 3;
+	int64 last_log_term = 4;
+}
+
+message vote_response
+{
+	int64 term = 1;
+	bool vote_granted = 2;
+	bool log_ok = 3;
+}
+enum type
+{
+	e_append_log = 0;
+	e_configuration = 1;
+};
+message log_entry
+{
+	int64 term = 1;
+	type type = 2;
+	string log_data_ = 3;
+}
+
+message append_entries_request
+{
+	int64 term = 1;
+	string leader_id = 2;
+	int64 prev_log_index = 3;
+	int64 prev_log_term = 4;
+	int64 leader_commit = 5;
+	repeated log_entry entries = 6;
+};
+
+message append_entries_response
+{
+	int64 term = 1;
+	int64 last_log_index = 2;
+	bool success = 3;
+};
+
+message install_snapshot_request
+{
+	int64 term = 1;
+	int64 last_snapshot_index = 2;
+	int64 last_included_term = 3;
+	int64 offset = 4;
+	bool done = 5;
+	string leader_id = 6;
+	string data = 7 ;
+};
+
+message install_snapshot_response
+{
+	int64 term = 1;
+	int64 bytes_stored = 2;
+};
+
+		
+		
+		
+		
+		
+		

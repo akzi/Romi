@@ -8,6 +8,10 @@ namespace romi
 		return message<TYPE>::parse_from_array(buffer, len);\
 	});
 
+#define REGIST_RECEIVE(MESSAGE) \
+		actor::receive([this] (const romi::addr &addr, const MESSAGE &message)\
+		{return receive(addr, message);});
+
 	template<typename T>
 	inline std::enable_if_t<std::is_base_of<
 		::google::protobuf::Message, T>::value, std::string>
@@ -207,13 +211,13 @@ namespace romi
 	}
 
 	template<typename Handle>
-	inline void actor::receivce(Handle handle)
+	inline void actor::receive(Handle handle)
 	{
-		receivce_help(to_function(std::forward<Handle>(handle)));
+		receive_help(to_function(std::forward<Handle>(handle)));
 	}
 
 	template<typename Message>
-	inline void actor::receivce_help(
+	inline void actor::receive_help(
 		std::function<void(const addr&, const Message &)> handle)
 	{
 		auto func = [handle](message_base::ptr msg) {

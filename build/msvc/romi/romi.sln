@@ -5,8 +5,6 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "romi", "romi.vcxproj", "{3A71E816-FFF9-4654-86C6-CBEBE0FF2834}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "servers", "servers", "{9931276C-AAC6-4D80-ACDD-F4769AB56000}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{FA4A9AE5-9112-4BC2-9A7B-B079F0BFD0D2}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nameserver_test", "tests\nameserver_test\nameserver_test.vcxproj", "{8753E830-5F21-4143-9DBB-EEEAFEFAFBCF}"
@@ -51,6 +49,5 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{8753E830-5F21-4143-9DBB-EEEAFEFAFBCF} = {FA4A9AE5-9112-4BC2-9A7B-B079F0BFD0D2}
-		{95877DBB-65EB-4A13-9B7E-1EDA41BBAF02} = {9931276C-AAC6-4D80-ACDD-F4769AB56000}
 	EndGlobalSection
 EndGlobal

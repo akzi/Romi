@@ -7,7 +7,7 @@ private:
 	{
 		using namespace romi;
 		
-		receivce([this](const addr &from, const sys::get_engine_list_resp &resp) {
+		receive([this](const addr &from, const sys::get_engine_list_resp &resp) {
 
 			for (int i = 0; i < resp.engine_info_size(); i++)
 			{

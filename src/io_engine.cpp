@@ -121,14 +121,14 @@ namespace net
 
 	void io_engine::start()
 	{
-		const char *addr = "inproc://io_engine.recevicer";
+		const char *addr = "inproc://io_engine.receiver";
 		std::mutex mutex_;
 		std::condition_variable cv_;
 
 		std::unique_lock<std::mutex> locker(mutex_);
 
-		recevicer_ = std::thread([&] {
-			start_recevicer([&] {
+		receiver_ = std::thread([&] {
+			start_receiver([&] {
 				cv_.notify_one();
 			}, addr);
 		});
@@ -152,10 +152,10 @@ namespace net
 	void io_engine::stop()
 	{
 		is_stop_ = true;
-		recevicer_.join();
+		receiver_.join();
 		sender_.join();
 	}
-	void io_engine::start_recevicer(std::function<void()> init_done, const char *addr)
+	void io_engine::start_receiver(std::function<void()> init_done, const char *addr)
 	{
 		auto socket = zmq_socket(zmq_ctx_, ZMQ_PULL);
 		if (!socket)

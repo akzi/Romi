@@ -94,6 +94,14 @@ namespace romi
 
 	void actor::connect(sys::net_connect &msg)
 	{
+		if (msg.engine_id() == addr_.engine_id())
+		{
+			sys::net_connect_notify notify;
+			notify.set_connected(true);
+			notify.mutable_net_connect()->CopyFrom(msg);
+			send_msg_(make_message(get_engine_addr(), addr_, notify));
+			return;
+		}
 		send(get_engine_addr(), msg);
 	}
 

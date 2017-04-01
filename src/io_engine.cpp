@@ -1,11 +1,12 @@
 #include "romi.hpp"
 #include "zmq.h"
 
+#define EVENT_TO_STR(EVENT,value)\
+		if (EVENT == value)\
+			return #EVENT;
+
 namespace romi
 {
-
-const char *inproc_addr = "inproc://cmd_queue.ipc";
-
 namespace net
 {
 	command & command::operator=(command &&other)
@@ -59,10 +60,10 @@ namespace net
 
 	}
 
-	void cmd_queue::init(void *zmq_ctx_)
+	void cmd_queue::init(void *zmq_ctx_, const char *addr_)
 	{
 		socket_ = zmq_socket(zmq_ctx_, ZMQ_PAIR);
-		if (zmq_connect(socket_, inproc_addr) == -1)
+		if (zmq_connect(socket_, addr_) == -1)
 			throw std::runtime_error(zmq_strerror(errno));
 	}
 
@@ -124,6 +125,7 @@ namespace net
 
 	void io_engine::start()
 	{
+		const char *addr = "inproc://io_engine.recevicer";
 		std::mutex mutex_;
 		std::condition_variable cv_;
 
@@ -132,9 +134,17 @@ namespace net
 		recevicer_ = std::thread([&] {
 			start_recevicer([&] {
 				cv_.notify_one();
-			});
+			}, addr);
 		});
 		cv_.wait(locker);
+
+		monitor_ = std::thread([&] {
+			start_monitor([&] {
+				cv_.notify_one();
+			}, addr);
+		});
+		cv_.wait(locker);
+
 		sender_ = std::thread([&] {
 			start_sender([&] {
 				cv_.notify_one();
@@ -149,26 +159,29 @@ namespace net
 		recevicer_.join();
 		sender_.join();
 	}
-	void io_engine::start_recevicer(std::function<void()> init_done)
+	void io_engine::start_recevicer(std::function<void()> init_done, const char *addr)
 	{
 		auto socket = zmq_socket(zmq_ctx_, ZMQ_PULL);
 		if (!socket)
 			throw std::runtime_error(zmq_strerror(errno));
 
-		auto rc = zmq_bind(socket, bind_addr_.c_str());
-		if (rc == -1)
+		if (zmq_bind(socket, bind_addr_.c_str()) == -1)
 		{
 			zmq_close(socket);
 			throw std::runtime_error(zmq_strerror(errno));
 		}
-
+		if (zmq_socket_monitor(socket, addr, ZMQ_EVENT_ALL) == -1)
+		{
+			zmq_close(socket);
+			throw std::runtime_error(zmq_strerror(errno));
+		}
 		int val = 100;
-		rc = zmq_setsockopt(socket, ZMQ_RCVTIMEO, &val, sizeof(val));
-		if (rc == -1)
+		if (zmq_setsockopt(socket, ZMQ_RCVTIMEO, &val, sizeof(val)) == -1)
 		{
 			zmq_close(socket);
 			throw std::runtime_error("zmq_setsockopt failed");
 		}
+
 		init_done();
 		zmq_msg_t msg;
 		zmq_msg_init(&msg);
@@ -179,7 +192,6 @@ namespace net
 				if (errno == EAGAIN)
 					continue;
 				std::cout << zmq_strerror(errno) << std::endl;
-
 			}
 			try
 			{
@@ -197,12 +209,15 @@ namespace net
 
 	void io_engine::start_sender(std::function<void()> init_done)
 	{
-		auto socket = zmq_socket(zmq_ctx_, ZMQ_PAIR);
-		if (zmq_bind(socket, inproc_addr) == -1)
-			throw std::runtime_error(zmq_strerror(errno));
-		msg_queue_.init(zmq_ctx_);
-
+		const char * addr = "inproc://msg_queue_";
 		int val = 100;
+
+		auto socket = zmq_socket(zmq_ctx_, ZMQ_PAIR);
+		if (zmq_bind(socket, addr) == -1)
+			throw std::runtime_error(zmq_strerror(errno));
+		msg_queue_.init(zmq_ctx_, addr);
+
+		
 		int rc = zmq_setsockopt(socket, ZMQ_RCVTIMEO, &val, sizeof(val));
 		if (rc == -1)
 			throw std::runtime_error("zmq_setsockopt failed");
@@ -227,6 +242,78 @@ namespace net
 		zmq_close(socket);
 	}
 
+	static bool read_msg(void* socket, zmq_event_t& event, std::string& addr)
+	{
+		int rc;
+		zmq_msg_t msg1;  
+		zmq_msg_t msg2;  
+
+		zmq_msg_init(&msg1);
+		zmq_msg_init(&msg2);
+
+		rc = zmq_msg_recv(&msg1, socket, 0);
+		if (rc == -1 && zmq_errno() == ETERM)
+			return false;
+
+		assert(rc != -1);
+		assert(zmq_msg_more(&msg1) != 0);
+		rc = zmq_msg_recv(&msg2, socket, 0);
+		if (rc == -1 && zmq_errno() == ETERM)
+			return false;
+
+		assert(rc != -1);
+		assert(zmq_msg_more(&msg2) == 0);
+		const char* data = (char*)zmq_msg_data(&msg1);
+		memcpy(&event.event, data, sizeof(event.event));
+		memcpy(&event.value, data + sizeof(event.event), sizeof(event.value));
+		// copy address part
+		addr = std::string((char*)zmq_msg_data(&msg2), zmq_msg_size(&msg2));
+
+		if (event.event == ZMQ_EVENT_MONITOR_STOPPED)
+			return false;
+
+		return true;
+	}
+
+	const char *event_to_str(int event)
+	{
+
+		EVENT_TO_STR(ZMQ_EVENT_CONNECTED, event);
+		EVENT_TO_STR(ZMQ_EVENT_CONNECT_DELAYED, event);
+		EVENT_TO_STR(ZMQ_EVENT_CONNECT_RETRIED, event);
+		EVENT_TO_STR(ZMQ_EVENT_LISTENING, event);
+		EVENT_TO_STR(ZMQ_EVENT_BIND_FAILED, event);
+		EVENT_TO_STR(ZMQ_EVENT_ACCEPTED, event);
+		EVENT_TO_STR(ZMQ_EVENT_ACCEPT_FAILED, event);
+		EVENT_TO_STR(ZMQ_EVENT_CLOSED, event);
+		EVENT_TO_STR(ZMQ_EVENT_CLOSE_FAILED, event);
+		EVENT_TO_STR(ZMQ_EVENT_DISCONNECTED, event);
+		EVENT_TO_STR(ZMQ_EVENT_MONITOR_STOPPED, event);
+		
+		return "";
+	}
+	void io_engine::start_monitor(std::function<void()> init_done, const char *addr_)
+	{
+		auto socket = zmq_socket(zmq_ctx_, ZMQ_PAIR);
+		assert(socket);
+		if (zmq_connect(socket, addr_) == -1)
+		{
+			zmq_close(socket);
+			throw std::runtime_error(zmq_strerror(errno));
+		}
+		init_done();
+		zmq_event_t event;
+		std::string remote_addr;
+		while (is_stop_ == false )
+		{
+			if (read_msg(socket, event, remote_addr) == false)
+				break;
+			std::string info = remote_addr + " "+ event_to_str(event.event) \
+				+ " "+ std::to_string(event.value);
+			std::cout << info << std::endl;
+		}
+	}
+
 	io_engine::socket io_engine::connect(std::string remote_addr)
 	{
 		auto socket_ = zmq_socket(zmq_ctx_, ZMQ_PUSH);
@@ -247,16 +334,35 @@ namespace net
 		addr to = _msg.net_connect_->from();
 
 		sys::net_connect_notify notify;
-		notify.set_connected(false);
+		notify.set_connected(true);
+		notify.mutable_net_connect()->CopyFrom(*_msg.net_connect_);
 
-		auto socket = connect(remote_addr);
+		std::shared_ptr<socket_info::socket> socket;
+		 for (auto &itr: sockets_)
+		 {
+			 if (itr.second.remote_addr_ == remote_addr)
+			 {
+				 socket = itr.second.socket_;
+				 break;
+			 }
+		 }
+		 if (!socket)
+		 {
+			 auto sock = connect(remote_addr);
+			 if (!sock)
+				 return send_msg_(make_message(to, to, notify));
+
+			 socket.reset(new socket_info::socket (sock), 
+				 [](socket_info::socket * socket){
+				 zmq_close(socket->socket_);
+			 });
+		 }
 		if (socket)
 		{
-			sockets_[engine_id] = socket;
+			sockets_[engine_id] = {socket, remote_addr};
 			notify.set_connected(true);
+			send_msg_(make_message(to, to, notify));
 		}
-		notify.mutable_net_connect()->CopyFrom(*_msg.net_connect_);
-		send_msg_(make_message(to, to, notify));
 	}
 
 	void io_engine::do_send(command &_msg)
@@ -272,9 +378,10 @@ namespace net
 			send_msg_(make_message(message->from(), message->from(), notify));
 			return;
 		}
+		auto socket = itr->second.socket_->socket_;
 		auto buffer = message->serialize_as_string();
-		int rc = zmq_send(itr->second, buffer.data(), buffer.size(), 0);
-		if (rc == -1)
+
+		if (zmq_send(socket, buffer.data(), buffer.size(), 0) == -1)
 			std::cout << zmq_strerror(errno) << std::endl;
 	}
 

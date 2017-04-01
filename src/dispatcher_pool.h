@@ -15,6 +15,8 @@ namespace romi
 		void dispatch(std::weak_ptr<actor> &&actor_);
 
 		void increase(int count);
+
+		uint32_t size();
 	private:
 		bool steal_actor(std::weak_ptr<actor> &_actor);
 

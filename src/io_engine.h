@@ -38,7 +38,7 @@ namespace net
 	{
 	public:
 		cmd_queue();
-		void init(void *zmq_ctx_);
+		void init(void *zmq_ctx_, const char *addr_);
 		void push_back(command &&_msg);
 		bool pop(command &_msg);
 	private:
@@ -72,14 +72,18 @@ namespace net
 		void stop();
 
 	private:
-		void start_recevicer(std::function<void()>);
+		void start_recevicer(std::function<void()>, const char *addr_);
+
+		void start_monitor(std::function<void()>, const char *addr_);
 
 		void start_sender(std::function<void()>);
+
 
 		socket connect(std::string remote_addr);
 
 		void do_connect(command &_msg);
 
+		
 		void do_send(command &_msg);
 
 		void process_msg();
@@ -92,10 +96,24 @@ namespace net
 
 		std::thread sender_;
 		std::thread recevicer_;
+		std::thread monitor_;
 
 		cmd_queue msg_queue_;
 
-		std::map<uint64_t, void *> sockets_;
+		struct socket_info
+		{
+			struct socket
+			{
+				socket(void *sock)
+				:socket_(sock){}
+
+				void *socket_;
+			};
+			std::shared_ptr<socket> socket_;
+			std::string remote_addr_;
+		};
+
+		std::map<uint64_t, socket_info> sockets_;
 		std::function<void(message_base::ptr&&)> send_msg_;
 		std::function<void(void*, std::size_t)> handle_msg_;
 

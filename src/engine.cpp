@@ -230,6 +230,19 @@ namespace romi
 			del_actor(_addr); 
 		};
 		
+		_actor->get_dispatcher_size_ = [this] {
+			return dispatcher_pool_.size();
+		};
+
+		_actor->get_actor_size_ = [this] {
+			std::lock_guard<std::mutex> locker(actors_.lock_);
+			return actors_.actors_.size();
+		};
+		
+		_actor->increase_dispather_ = [this](int count){
+			dispatcher_pool_.increase(count);
+		};
+
 		add_actor(_actor);
 		send(make_message(_actor->addr_, _actor->addr_, sys::actor_init()));
 	}

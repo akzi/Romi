@@ -63,9 +63,15 @@ namespace romi
 				});
 				dispatchers_[i]->start();
 				count--;
+				dispather_size_++;
 			}
 		}
-		dispather_size_ += count;
+	}
+
+
+	uint32_t dispatcher_pool::size()
+	{
+		return dispather_size_;
 	}
 
 	bool dispatcher_pool::steal_actor(std::weak_ptr<actor> &_actor)

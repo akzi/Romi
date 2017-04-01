@@ -97,6 +97,24 @@ namespace romi
 		send(get_engine_addr(), msg);
 	}
 
+
+	std::size_t actor::get_actor_size()
+	{
+		return get_actor_size_();
+	}
+
+	uint32_t actor::get_dispatcher_size()
+	{
+		return get_dispatcher_size_();
+	}
+
+	void actor::increase_dispather(int count_)
+	{
+		if (count_ <= 0)
+			return;
+		increase_dispather_(count_);
+	}
+
 	void actor::init()
 	{
 		std::cout << "actor init" << std::endl;

@@ -17,8 +17,13 @@ private:
 				std::cout << "name:"<<engine_info.name() << std::endl;
 			}
 		});
-
 		send(get_nameserver_addr(), sys::get_engine_list_req{});
+
+		std::cout << "dispather count:" << get_dispatcher_size() << std::endl;
+		std::cout << "actor count:" << get_actor_size() << std::endl;
+
+		increase_dispather(10);
+		std::cout << "dispather count:" << get_dispatcher_size() << std::endl;
 	}
 };
 

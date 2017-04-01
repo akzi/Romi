@@ -29,6 +29,7 @@
 *.app
 x64
 *.VC.db
+*.VC.VC.opendb
 
 Release
 Debug

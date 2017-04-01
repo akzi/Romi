@@ -1,4 +1,5 @@
 #include "nameserver.h"
+#include <random>
 
 namespace romi
 {
@@ -32,10 +33,9 @@ namespace romi
 
 	void nameserver::init()
 	{
-		std::cout << "nameservice init." << std::endl;
 		regist_message();
 		connect_node();
-		do_vote_request();
+		set_election_timer();
 	}
 
 	void nameserver::connect_node()
@@ -49,19 +49,165 @@ namespace romi
 		}
 	}
 
-	void nameserver::do_vote_request()
+	void nameserver::set_election_timer()
 	{
-
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		std::uniform_int_distribution<> dis(1, (int)raft_info_.election_timeout_);
+		raft_info_.election_timer_id_ 
+			= set_timer(dis(gen), [this] 
+		{
+			if (!raft_info_.election_timer_id_)
+				return false;
+			do_election();
+			set_election_timer();
+			return false;
+		});
 	}
 
-	void nameserver::receive(const addr &from, const romi::raft::vote_request &message)
+	void nameserver::do_election()
 	{
+		raft_info_.current_term_++;
+		raft_info_.vote_requests_.clear();
+		for (auto &itr:raft_info_.cluster_)
+		{
+			raft::vote_request req;
+			req.set_req_id(gen_req_id());
+			req.set_candidate(raft_info_.raft_id_);
+			req.set_term(raft_info_.current_term_);
+			req.set_last_log_index(raft_info_.last_log_index_);
+			req.set_last_log_term(raft_info_.last_log_term_);
+			raft_info_.vote_requests_.emplace(req.req_id(), req);
+			send(itr.addr_, req);
+		}
+	}
+	void nameserver::cancel_election_timer()
+	{
+		if(raft_info_.election_timer_id_)
+			cancel_timer(raft_info_.election_timer_id_);
+		raft_info_.election_timer_id_ = 0;
+	}
+	void nameserver::set_down(uint64_t term)
+	{
+		if (raft_info_.current_term_ < term)
+		{
+			raft_info_.current_term_ = term;
+			raft_info_.leader_id_.clear();
+			raft_info_.vote_for_.clear();
+			/*
+			if(snapshot_writer_)
+					snapshot_writer_.discard();
+			*/
+		}
+		if (raft_info_.state_ == raft::state::e_candidate)
+		{
+			raft_info_.vote_responses_.clear();
+			cancel_election_timer();
+		}
+		if (raft_info_.state_ == raft::state::e_leader)
+		{
+			//
+		}
+		raft_info_.state_ = raft::state::e_follower;
+		//notify_noleader_error();
+		set_election_timer();
+	}
 
+	void nameserver::become_leader()
+	{
+		raft_info_.state_ = raft::e_leader;
+		cancel_election_timer();
+		replicate_log_entry();
+	}
+	void nameserver::replicate_log_entry()
+	{
+		for (auto itr: raft_info_.cluster_)
+		{
+			raft::replicate_log_entries_request req;
+			req.set_req_id(gen_req_id());
+			req.set_leader_commit(raft_info_.committed_index_);
+			req.set_leader_id(raft_info_.raft_id_);
+			req.set_term(raft_info_.current_term_);
+			add_log_entries(req, itr.next_index_);
+			send(itr.addr_, req);
+		}
+	}
+	void nameserver::add_log_entries(raft::replicate_log_entries_request &req, uint64_t next_index)
+	{
+		req.add_entries()->set_index();
+	}
+	uint64_t nameserver::gen_req_id()
+	{
+		return ++req_id_;
+	}
+
+	void nameserver::receive(const addr &from, const romi::raft::vote_request &req)
+	{
+		raft::vote_response resp;
+		resp.set_log_ok(true);
+
+		if (req.last_log_term() < raft_info_.last_log_term_)
+		{
+			resp.set_log_ok(false);
+		}
+		else if (req.last_log_term() == raft_info_.last_log_term_)
+		{
+			if (req.last_log_index() < raft_info_.last_log_index_)
+				resp.set_log_ok(false);
+		}
+
+		if (req.term() > raft_info_.current_term_)
+		{
+			set_down(req.term());
+		}
+
+		if (req.term() == raft_info_.current_term_)
+		{
+			if (resp.log_ok())
+			{
+				if (raft_info_.vote_for_.empty())
+				{
+					set_down(req.term());
+					raft_info_.vote_for_ = req.candidate();
+					resp.set_vote_granted(true);
+				}
+			}
+		}
+		resp.set_term(raft_info_.current_term_);
+		send(from, resp);
 	}
 
 	void nameserver::receive(const addr &from, const raft::vote_response& resp)
 	{
+		if (raft_info_.state_ != raft::e_candidate)
+			return;
 
+		if (resp.term() < raft_info_.current_term_)
+			return;
+
+		if (raft_info_.vote_requests_.find(resp.req_id()) 
+			== raft_info_.vote_requests_.end())
+			return;
+
+		if (raft_info_.current_term_ < resp.term())
+			set_down(resp.term());
+
+		raft_info_.vote_responses_.push_back(resp);
+		int votes = 1;
+
+		for (auto &itr: raft_info_.vote_responses_)
+		{
+			if (itr.vote_granted())
+			{
+				votes++;
+			}
+		}
+
+		if (votes >= (raft_info_.cluster_.size() + 1) / 2 + 1)
+		{
+			raft_info_.vote_responses_.clear();
+			become_leader();
+		}
 	}
 
 	void nameserver::receive(const addr &from, const raft::append_entries_request &req)
@@ -230,10 +376,5 @@ namespace romi
 		return std::chrono::high_resolution_clock::now()
 			.time_since_epoch().count() + next_engine_id_;
 	}
-
-	
-
-	
-
 }
 

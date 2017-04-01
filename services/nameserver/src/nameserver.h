@@ -1,6 +1,7 @@
 #pragma once
 #include "romi.hpp"
 #include "raft.pb.h"
+#include "raft/node.h"
 #include "nameserver_config.hpp"
 
 namespace romi
@@ -48,8 +49,21 @@ namespace romi
 		//
 		void connect_node();
 
-		void do_vote_request();
+		void set_election_timer();
 
+		void do_election();
+
+		void cancel_election_timer();
+	
+		void set_down(uint64_t term);
+	
+		void become_leader();
+	
+		void replicate_log_entry();
+	
+		void add_log_entries(raft::replicate_log_entries_request &req, uint64_t next_index);
+	
+		uint64_t gen_req_id();
 		//
 		void regist_actor(const actor_info & info);
 
@@ -68,12 +82,16 @@ namespace romi
 		void get_engine_list(sys::get_engine_list_resp &resp);
 
 		uint64_t unique_id();
-
 		uint64_t next_engine_id_ = 0;
 
 		std::map<std::string, engine_info> engine_map_;
 		std::map<std::string, actor_info> actor_names_;
 
 		nameserver_config config_;
+
+		//
+		raft::info raft_info_;
+
+		uint64_t req_id_ = 1;
 	};
 }

@@ -10,6 +10,13 @@
     <ClCompile Include="..\..\..\..\services\nameserver\src\raft.pb.cc">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\services\nameserver\src\raft\node.cpp">
+      <Filter>src\raft</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\services\nameserver\src\raft\raft_log.cpp">
+      <Filter>src\raft</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\services\nameserver\src\raft\store.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -30,6 +37,12 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\services\nameserver\src\raft\node.h">
+      <Filter>src\raft</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\services\nameserver\src\raft\raft_log.h">
+      <Filter>src\raft</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\services\nameserver\src\raft\store.h">
       <Filter>src\raft</Filter>
     </ClInclude>
   </ItemGroup>

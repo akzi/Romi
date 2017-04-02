@@ -22,12 +22,17 @@
     <ClCompile Include="..\..\..\..\services\nameserver\src\main.cpp" />
     <ClCompile Include="..\..\..\..\services\nameserver\src\nameserver.cpp" />
     <ClCompile Include="..\..\..\..\services\nameserver\src\raft.pb.cc" />
+    <ClCompile Include="..\..\..\..\services\nameserver\src\raft\store.cpp" />
+    <ClCompile Include="..\..\..\..\services\nameserver\src\raft\node.cpp" />
+    <ClCompile Include="..\..\..\..\services\nameserver\src\raft\raft_log.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\services\nameserver\src\nameserver.h" />
     <ClInclude Include="..\..\..\..\services\nameserver\src\nameserver_config.hpp" />
     <ClInclude Include="..\..\..\..\services\nameserver\src\raft.pb.h" />
+    <ClInclude Include="..\..\..\..\services\nameserver\src\raft\store.h" />
     <ClInclude Include="..\..\..\..\services\nameserver\src\raft\node.h" />
+    <ClInclude Include="..\..\..\..\services\nameserver\src\raft\raft_log.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\services\nameserver\proto\raft.proto" />

@@ -7,7 +7,7 @@
 namespace romi
 {
 	
-	class nameserver :public actor
+	class nameserver :public raft::node
 	{
 	public:
 		nameserver(nameserver_config cfg);
@@ -19,20 +19,6 @@ namespace romi
 		virtual void init() override;
 
 		void regist_message();
-		
-		//raft
-		void receive(const addr &from, const romi::raft::vote_request &message);
-
-		void receive(const addr &from, const raft::install_snapshot_response &resp);
-	
-		void receive(const addr &from, const raft::install_snapshot_request &resp);
-	
-		void receive(const addr &from, const raft::append_entries_response &resp);
-	
-		void receive(const addr &from, const raft::vote_response& resp);
-
-		void receive(const addr &from, const raft::append_entries_request &req);
-
 		//sys
 		void receive(const addr &from, const sys::net_connect_notify &notify);
 
@@ -46,24 +32,6 @@ namespace romi
 
 		void receive(const addr &from, const sys::get_engine_list_req &req);
 
-		//
-		void connect_node();
-
-		void set_election_timer();
-
-		void do_election();
-
-		void cancel_election_timer();
-	
-		void set_down(uint64_t term);
-	
-		void become_leader();
-	
-		void replicate_log_entry();
-	
-		void add_log_entries(raft::replicate_log_entries_request &req, uint64_t next_index);
-	
-		uint64_t gen_req_id();
 		//
 		void regist_actor(const actor_info & info);
 
@@ -88,9 +56,6 @@ namespace romi
 		std::map<std::string, actor_info> actor_names_;
 
 		nameserver_config config_;
-
-		//
-		raft::info raft_info_;
 
 		uint64_t req_id_ = 1;
 	};

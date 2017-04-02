@@ -207,6 +207,32 @@ namespace raft
 		return true;
 	}
 
+	bool store::get_logs(
+		const std::string &name,
+		uint64_t index, 
+		uint32_t count, 
+		std::list<std::pair<uint64_t, std::string>> &entries)
+	{
+		auto cf_handle = find_log_cf("$" + name, nullptr, index);
+		if (!cf_handle)
+			return false;
+
+		auto iter = db_->NewIterator(rocksdb::ReadOptions(true, true), cf_handle);
+		for (iter->SeekToFirst(); iter->Valid(); iter->Next())
+		{
+			auto key = iter->key();
+			auto value = iter->value();
+			auto num = std::strtoull(key.data(), 0, 10);
+			entries.emplace_back(num, value);
+			if (count < entries.size())
+				return true;
+		}
+		if (entries.size() < count)
+			get_logs(name, entries.back().first + 1, count, entries);
+
+		return true;
+	}
+
 	void store::drop_excess_log_cf(const std::string &name, int max_size)
 	{
 		auto cf_map = get_log_cf_map(name);

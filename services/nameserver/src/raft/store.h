@@ -62,12 +62,19 @@ namespace raft
 		bool get_last_log(const std::string &name,
 			uint64_t & index, std::string &entry);
 
+
 		bool get_logs(
 			const std::string &name,
 			uint64_t index,
 			uint32_t max_bytes,
 			std::list<std::pair<uint64_t, std::string>> &entries,
 			uint32_t &bytes_);
+
+		bool get_logs(
+			const std::string &name,
+			uint64_t index,
+			uint32_t count,
+			std::list<std::pair<uint64_t, std::string>> &entries);
 
 	private:
 		store(const std::string &db_path);

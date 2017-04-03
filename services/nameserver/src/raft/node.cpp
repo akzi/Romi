@@ -19,6 +19,59 @@ namespace romi
 			REGIST_RECEIVE(raft::install_snapshot_request);
 			REGIST_RECEIVE(raft::install_snapshot_response);
 		}
+		void node::repicate_callback(const std::string & data, uint64_t index)
+		{
+			assert(false);
+		}
+
+		void node::commit_callback(uint64_t index)
+		{
+			assert(false);
+		}
+
+
+		void node::no_leader_callback()
+		{
+			assert(false);
+		}
+
+		bool node::is_leader()
+		{
+			return state_ == e_leader;
+		}
+
+		bool node::support_snapshot()
+		{
+			assert(false);
+			return false;
+		}
+
+		std::string node::get_snapshot_file(uint64_t index)
+		{
+			assert(false);
+			return{};
+		}
+
+		void node::make_snapshot_callback(uint64_t last_include_term, uint64_t last_include_index)
+		{
+			assert(false);
+		}
+
+		uint64_t node::replicate(const std::string &msg)
+		{
+			assert(is_leader());
+			raft::log_entry entry;
+
+			entry.set_index(++last_log_index_);
+			entry.set_term(last_log_term_);
+			entry.set_log_data_(msg);
+			entry.set_type(e_raft_log);
+
+			write_raft_log(entry);
+			wait_for_commits_.push_back({ last_log_index_,{} });
+			replicate_log_entry();
+			return last_log_index_;
+		}
 
 		void node::connect_node()
 		{
@@ -36,10 +89,10 @@ namespace romi
 			std::random_device rd;
 			std::mt19937 gen(rd());
 			std::uniform_int_distribution<> dis(1, (int)election_timeout_);
-			election_timer_id_
+			election_uint64_t_
 				= set_timer(dis(gen), [this]
 			{
-				if (!election_timer_id_)
+				if (!election_uint64_t_)
 					return false;
 				do_election();
 				set_election_timer();
@@ -65,9 +118,9 @@ namespace romi
 		}
 		void node::cancel_election_timer()
 		{
-			if (election_timer_id_)
-				cancel_timer(election_timer_id_);
-			election_timer_id_ = 0;
+			if (election_uint64_t_)
+				cancel_timer(election_uint64_t_);
+			election_uint64_t_ = 0;
 		}
 		void node::set_down(uint64_t term)
 		{
@@ -76,22 +129,31 @@ namespace romi
 				current_term_ = term;
 				leader_id_.clear();
 				vote_for_.clear();
-				/*
-				if(snapshot_writer_)
-				snapshot_writer_.discard();
-				*/
 			}
 			if (state_ == e_candidate)
 			{
 				vote_responses_.clear();
 				cancel_election_timer();
 			}
-			if (state_ == e_leader)
+			else if (state_ == e_leader)
 			{
-				//
+				for (auto &itr: peers_)
+				{
+					itr.second.req_ids_.clear();
+					if (itr.second.heartbeat_uint64_t_)
+					{
+						cancel_timer(itr.second.heartbeat_uint64_t_);
+						itr.second.heartbeat_uint64_t_ = 0;
+						itr.second.match_index_ = 0;
+						itr.second.next_index_ = 0;
+						itr.second.last_heartbeat_time_ = 
+							high_resolution_clock::now();
+					}
+				}
+				wait_for_commits_.clear();
+				no_leader_callback();
 			}
 			state_ = e_follower;
-			//notify_noleader_error();
 			set_election_timer();
 		}
 
@@ -105,23 +167,80 @@ namespace romi
 		{
 			for (auto itr : peers_)
 			{
-				//
-				if(itr.second.req_ids_.size() > 10)
-					continue;
-
-				auto id = gen_req_id();
-				raft::replicate_log_entries_request req;
-				req.set_req_id(id);
-				req.set_leader_commit(committed_index_);
-				req.set_leader_id(raft_id_);
-				req.set_term(current_term_);
-				add_log_entries(itr.second.next_index_, itr.second.next_index_ == 0 ? 1:0, req);
-				itr.second.req_ids_.insert(id);
-				send(itr.second.addr_, req);
+				replicate_log_entry(itr.second);
 			}
 		}
 
-		void node::add_log_entries(uint64_t next_index, 
+		void node::replicate_log_entry(peer &_peer)
+		{
+			if (_peer.req_ids_.size() > max_pipeline_req)
+				return;
+			raft::replicate_log_entries_request req;
+			uint32_t max_bytes = _peer.next_index_ == 0 ? 1 : 0;
+
+			add_log_entries(_peer.next_index_, max_bytes, req);
+
+			if (!req.entries_size()  && 
+				_peer.next_index_ < last_log_index_)
+			{
+				if (install_snapshot(_peer))
+				{
+					if (_peer.heartbeat_uint64_t_)
+					{
+						set_heartbeat_timer(_peer);
+						return;
+					}
+				}
+			}
+			auto req_id = gen_req_id();
+			req.set_req_id(req_id);
+			req.set_leader_commit(committed_index_);
+			req.set_leader_id(raft_id_);
+			req.set_term(current_term_);
+			_peer.req_ids_.insert(req_id);
+			send(_peer.addr_, req);
+			_peer.last_heartbeat_time_ = high_resolution_clock::now();
+
+			set_heartbeat_timer(_peer);
+		}
+		bool node::install_snapshot(peer & _peer)
+		{
+			if (!support_snapshot())
+				return false;
+			auto path = get_snapshot_file(_peer.next_index_);
+			if (path.empty())
+			{
+				make_snapshot_callback(last_log_term_, last_log_index_);
+				return false;
+			}
+		}
+
+		void node::set_heartbeat_timer(peer &_peer)
+		{
+			if (_peer.heartbeat_uint64_t_)
+				cancel_timer(_peer.heartbeat_uint64_t_);
+
+			auto _addr = _peer.addr_;
+			auto diff = high_resolution_clock::now() - 
+				_peer.last_heartbeat_time_;
+
+			auto millis = std::chrono::duration_cast<
+				std::chrono::milliseconds>(diff).count();
+
+			_peer.heartbeat_uint64_t_ = set_timer(millis, [_addr, this]
+			{
+				if (state_ != e_leader)
+					return false;
+				auto itr = peers_.find(_addr);
+				if (itr == peers_.end())
+					return false;
+				itr->second.heartbeat_uint64_t_ = 0;
+				replicate_log_entry(itr->second);
+				return false;
+			});
+		}
+
+		void node::add_log_entries(uint64_t next_index,
 			uint32_t max_bytes, raft::replicate_log_entries_request &req)
 		{
 			log_.fill_log_entries(raft_id_, next_index, max_bytes, req);
@@ -212,7 +331,7 @@ namespace romi
 				for (auto &itr : entries)
 				{
 					assert(itr.index() == committed_index_ + 1);
-					commit_callback(itr.log_data_(), itr.index());
+					repicate_callback(itr.log_data_(), itr.index());
 					committed_index_ = itr.index();
 				}
 			}
@@ -221,7 +340,8 @@ namespace romi
 		void node::receive(const addr &from,
 			const raft::replicate_log_entries_response &resp)
 		{
-			if (peers_.find(from) == peers_.end())
+			if (state_ != e_leader || 
+				peers_.find(from) == peers_.end())
 				return;
 
 			auto &peer = peers_[from];
@@ -233,8 +353,22 @@ namespace romi
 			if (!resp.success())
 			{
 				peer.match_index_ = 0;
-				//check term;
+				if (current_term_ < resp.term())
+				{
+					set_down(resp.term());
+					return;
+				}
+				peer.next_index_ = resp.last_log_index() + 1;
+				return replicate_log_entry(peer);
 			}
+
+			peer.match_index_ = resp.last_log_index();
+			peer.next_index_ = peer.match_index_ + 1;
+
+			if (peer.match_index_ <= committed_index_)
+				return replicate_log_entry(peer);
+
+			check_commit_log_entries(peer.raft_id_, peer.match_index_);
 		}
 		
 
@@ -351,7 +485,13 @@ namespace romi
 			last_log_index_ = entries.back().first;
 		}
 
-		std::list<raft::log_entry> 
+		void node::write_raft_log(const raft::log_entry &entry)
+		{
+			log_.write_raft_log(raft_id_, 
+				std::make_pair(entry.index(), entry.SerializeAsString()));
+		}
+
+		std::list<raft::log_entry>
 			node::get_log_entries(uint64_t index, uint64_t count)
 		{
 			std::list<std::pair<uint64_t, std::string>> entries;
@@ -372,6 +512,25 @@ namespace romi
 		{
 			connect_node();
 		}
+
+		void node::check_commit_log_entries(const std::string &raft_id, uint64_t index)
+		{
+			for (auto itr = wait_for_commits_.begin(); itr != wait_for_commits_.end(); )
+			{
+				if (itr->index_ <= index)
+				{
+					itr->peer_replicated_.insert(raft_id);
+					if (itr->peer_replicated_.size() > majority())
+					{
+						commit_callback(itr->index_);
+						itr = wait_for_commits_.erase(itr);
+						continue;
+					}
+				}
+				++itr;
+			}
+		}
+
 	}
 }
 

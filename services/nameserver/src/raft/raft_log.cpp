@@ -54,6 +54,13 @@ namespace raft
 		}		
 	}
 
+	void raft_log::write_raft_log(const std::string &raft_id, 
+		std::pair<uint64_t, std::string> & entry)
+	{
+		if (!store::get_instance().append_log(raft_id, entry))
+			throw std::runtime_error("store append_log failed");
+	}
+
 	bool raft_log::get_log_entrys(
 		std::string raft_id_, 
 		uint64_t index, 

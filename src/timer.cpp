@@ -56,7 +56,7 @@ namespace romi
 			caster(now.time_since_epoch())).count();
 	}
 
-	romi::timer_id timer_manager::set_timer(std::size_t timeout, timer_handle &&handle)
+	uint64_t timer_manager::set_timer(std::size_t timeout, timer_handle &&handle)
 	{
 		auto timer_point = std::chrono::high_resolution_clock::now()
 			+ std::chrono::high_resolution_clock::
@@ -64,12 +64,12 @@ namespace romi
 		timer_callback callback;
 		callback.handle_ = std::move(handle);
 		callback.timeout_ = timeout;
-		callback.timer_id_ = ++next_id_;
+		callback.timer_id_= ++next_id_;
 		insert(std::make_pair(timer_point, callback));
 		return next_id_;
 	}
 
-	void timer_manager::cancel_timer(timer_id id)
+	void timer_manager::cancel_timer(uint64_t id)
 	{
 		for (auto itr = begin(); itr != end(); ++itr)
 		{
@@ -85,7 +85,7 @@ namespace romi
 
 	timer::~timer() {}
 
-	romi::timer_id timer::set_timer(std::size_t timeout, timer_handle &&timer_callback)
+	uint64_t timer::set_timer(std::size_t timeout, timer_handle &&timer_callback)
 	{
 		std::lock_guard<std::mutex> lg(mutex_);
 		auto id = timer_manager_.set_timer(timeout, std::move(timer_callback));
@@ -93,7 +93,7 @@ namespace romi
 		return id;
 	}
 
-	void timer::cancel_timer(timer_id id)
+	void timer::cancel_timer(uint64_t id)
 	{
 		if (!id)
 			return;

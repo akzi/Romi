@@ -1,4 +1,5 @@
 #pragma once
+#include <future>
 namespace romi
 {
 	class actor
@@ -10,6 +11,11 @@ namespace romi
 
 		virtual ~actor();
 
+
+		template<typename Actor, typename ...Args>
+		std::enable_if_t<std::is_base_of<actor, Actor>::value, addr>
+			spawn(Args &&...args);
+
 		template<typename Handle>
 		void receive(Handle handle);
 
@@ -18,9 +24,9 @@ namespace romi
 
 		void send(message_base::ptr &&msg);
 
-		timer_id set_timer(std::size_t mills, timer_handle &&);
+		uint64_t set_timer(std::size_t mills, timer_handle &&);
 
-		void cancel_timer(timer_id id);
+		void cancel_timer(uint64_t id);
 
 		void watch(addr actor_);
 
@@ -41,6 +47,7 @@ namespace romi
 		uint32_t get_dispatcher_size();
 
 		void increase_dispather(int count_);
+
 	private:
 		virtual void init();
 
@@ -50,7 +57,7 @@ namespace romi
 
 		void apply_msg(const message_base::ptr &msg);
 
-		void timer_expire(timer_id id);
+		void timer_expire(uint64_t id);
 
 		std::size_t receive_msg(message_base::ptr &&msg);
 
@@ -72,10 +79,10 @@ namespace romi
 
 		std::function<void(message_base::ptr)> send_msg_;
 		//timer
-		timer_id timer_id_ = 0;
-		std::function<void(timer_id)> cancel_timer_;
-		std::function<timer_id(addr, std::size_t, timer_id)> set_timer_;
-		std::map<timer_id, std::pair<timer_id, timer_handle>> timer_handles_;
+		uint64_t timer_id_= 0;
+		std::function<void(uint64_t)> cancel_timer_;
+		std::function<uint64_t(addr, std::size_t, uint64_t)> set_timer_;
+		std::map<uint64_t, std::pair<uint64_t, timer_handle>> timer_handles_;
 
 		//close
 		bool is_close_ = false;
@@ -94,5 +101,7 @@ namespace romi
 		std::function<void(int)> increase_dispather_;
 		std::function<std::size_t()> get_actor_size_;
 		std::function<uint32_t()> get_dispatcher_size_;
+
+		romi::engine *engine_;
 	};
 }

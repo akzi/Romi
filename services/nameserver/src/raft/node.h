@@ -4,21 +4,6 @@ namespace romi
 {
 namespace raft
 {
-	
-	struct peer
-	{
-		std::string net_addr_;
-		addr addr_;
-		std::string raft_id_;
-		uint64_t match_index_ = 0;
-		uint64_t next_index_ = 0;
-		uint64_t heatbeat_inteval_ = 3000;
-		high_resolution_clock::time_point last_heartbeat_time_;
-		uint64_t heartbeat_timer_id_ = 0;
-		std::set<uint64_t> req_ids_;
-
-	};
-	
 	class node : public actor
 	{
 	public:
@@ -28,15 +13,40 @@ namespace raft
 			e_candidate,
 			e_leader
 		};
-
 		node();
 	protected:
 		virtual void init_node();
 
-		virtual void commit_callback(const std::string & data, uint64_t index)
-		{
-		}
+		virtual void repicate_callback(const std::string & data, uint64_t index);
+
+		virtual void commit_callback(uint64_t index);
+
+		virtual void no_leader_callback();
+
+		virtual std::string get_snapshot_file(uint64_t index);
+
+		virtual void make_snapshot_callback(uint64_t last_include_term, uint64_t last_include_index);
+
+		virtual bool support_snapshot();
+
+		bool is_leader();
+
+		uint64_t replicate(const std::string &msg);
+
 	private:
+		struct peer
+		{
+			std::string net_addr_;
+			addr addr_;
+			std::string raft_id_;
+			uint64_t match_index_ = 0;
+			uint64_t next_index_ = 0;
+			uint64_t heatbeat_inteval_ = 3000;
+			high_resolution_clock::time_point last_heartbeat_time_;
+			uint64_t heartbeat_uint64_t_ = 0;
+			std::set<uint64_t> req_ids_;
+		};
+
 		void receive(const addr &from, const romi::raft::vote_request &message);
 
 		void receive(const addr &from, const raft::install_snapshot_response &resp);
@@ -64,6 +74,8 @@ namespace raft
 
 		void replicate_log_entry();
 
+		void replicate_log_entry(peer &_peer);
+
 		void add_log_entries(uint64_t next_index, uint32_t max_bytes, 
 			raft::replicate_log_entries_request &req);
 
@@ -71,18 +83,23 @@ namespace raft
 
 		uint64_t gen_req_id();
 
-		void response(const addr &from, 
-			const raft::replicate_log_entries_response &resp);
-
 		int majority();
 
 		void log_truncate_suffix(uint64_t index);
 
+		void response(const addr &from, const raft::replicate_log_entries_response &resp);
+
 		void write_raft_log(const std::list<std::pair<uint64_t, std::string>> &);
 
-		std::list<raft::log_entry> 
-			get_log_entries(uint64_t index, uint64_t count);
-		//
+		void write_raft_log(const raft::log_entry &entry);
+		std::list<raft::log_entry> get_log_entries(uint64_t index, uint64_t count);
+
+		void check_commit_log_entries(const std::string &raft_id, uint64_t match_index);
+		
+		bool install_snapshot(peer & _peer);
+
+		void set_heartbeat_timer(peer &_peer);
+
 		uint64_t req_id_ = 0;
 
 		state state_;
@@ -110,10 +127,17 @@ namespace raft
 		std::string vote_for_;
 		std::string leader_id_;
 		std::size_t election_timeout_ = 3000;
-		uint64_t election_timer_id_ = 0;
+		uint64_t election_uint64_t_ = 0;
 
-		
+		int max_pipeline_req = 10;
 		raft_log log_;
+
+		struct wait_for_commit
+		{
+			uint64_t index_;
+			std::set<std::string> peer_replicated_;
+		};
+		std::list<wait_for_commit> wait_for_commits_;
 	};
 	
 }

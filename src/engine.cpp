@@ -158,7 +158,7 @@ namespace romi
 		io_engine_.bind(config_.net_bind_addr_);
 		io_engine_.start();
 
-		timer_id_ = timer_.set_timer(config_.net_heartbeart_timeout, 
+		timer_id_= timer_.set_timer(config_.net_heartbeart_timeout, 
 			[this] {
 			check_engine_watcher();
 			return true;
@@ -182,16 +182,19 @@ namespace romi
 
 	void engine::init_actor(actor::ptr &_actor)
 	{
-		_actor->send_msg_ = [this](auto &&msg) {
-			send(std::move(msg));
-		};
+		
+		_actor->engine_ = this;
 		_actor->addr_.set_actor_id(gen_actor_id());
 		_actor->addr_.set_engine_id(engine_id_);
 		_actor->nameserver_addr_.set_engine_id(config_.nameserver_engine_id_);
 		_actor->nameserver_addr_.set_actor_id(config_.nameserver_actor_id_);
 
+		
+		_actor->send_msg_ = [this](auto &&msg) {
+			send(std::move(msg));
+		}; 
 		_actor->set_timer_ = [this](
-			addr _addr, std::size_t _delay, timer_id id) 
+			addr _addr, std::size_t _delay, uint64_t id) 
 		{
 			return timer_.set_timer(_delay, [=] {
 				sys::timer_expire expire;
@@ -201,7 +204,7 @@ namespace romi
 			});
 		};
 
-		_actor->cancel_timer_ = [this](timer_id id) { 
+		_actor->cancel_timer_ = [this](uint64_t id) { 
 			timer_.cancel_timer(id); 
 		};
 
@@ -321,7 +324,7 @@ namespace romi
 		if (watcher_info.timer_id_)
 			return;
 		auto engine_id = to.engine_id();
-		watcher_info.timer_id_ = 
+		watcher_info.timer_id_= 
 			timer_.set_timer(config_.net_heartbeart_interval, [=] {
 			ping(engine_id);
 			return true;
@@ -337,7 +340,7 @@ namespace romi
 		if (watcher_info.actors_.size())
 			return;
 		timer_.cancel_timer(watcher_info.timer_id_);
-		watcher_info.timer_id_ = 0;
+		watcher_info.timer_id_= 0;
 	}
 
 	void engine::resp_pong(const message_base::ptr &msg)

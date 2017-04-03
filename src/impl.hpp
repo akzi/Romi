@@ -204,6 +204,14 @@ namespace romi
 	}
 
 	//actor
+	
+	template<typename Actor, typename ...Args>
+	inline std::enable_if_t<std::is_base_of<actor, Actor>::value, addr>
+		actor::spawn(Args &&...args)
+	{
+		return engine_->spawn(std::forward<Args>(args)...);
+	}
+
 	template<typename T>
 	inline void actor::send(const addr &to, T &&obj)
 	{

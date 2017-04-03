@@ -24,6 +24,11 @@ namespace raft
 			const std::string &raft_id, 
 			const std::list<std::pair<uint64_t, std::string>> & entries);
 
+		void write_raft_log(
+			const std::string &raft_id, std::pair<uint64_t, std::string> & entry);
+
+
+
 		bool get_log_entrys(
 			std::string raft_id_, 
 			uint64_t index, 

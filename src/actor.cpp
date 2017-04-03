@@ -18,14 +18,14 @@ namespace romi
 		send_msg_(std::move(msg));
 	}
 
-	timer_id actor::set_timer(std::size_t mills, timer_handle &&handle)
+	uint64_t actor::set_timer(std::size_t mills, timer_handle &&handle)
 	{
 		timer_handles_[++timer_id_] = { 0, handle };
 		timer_handles_[timer_id_].first = set_timer_(addr_, mills, timer_id_);
 		return timer_id_;
 	}
 
-	void actor::cancel_timer(timer_id id)
+	void actor::cancel_timer(uint64_t id)
 	{
 		auto itr = timer_handles_.find(id);
 		if (itr != timer_handles_.end())
@@ -169,7 +169,7 @@ namespace romi
 		}
 	}
 
-	void actor::timer_expire(timer_id id)
+	void actor::timer_expire(uint64_t id)
 	{
 		auto itr = timer_handles_.find(id);
 		if (itr == timer_handles_.end() || itr->second.second())
@@ -190,7 +190,7 @@ namespace romi
 		{
 			if (const auto ptr = msg->get<sys::timer_expire>())
 			{
-				timer_expire(ptr->timer_id());
+				timer_expire(ptr->uint64_t());
 			}
 		});
 

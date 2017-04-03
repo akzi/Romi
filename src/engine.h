@@ -24,6 +24,7 @@ namespace romi
 		void start();
 
 		void stop();
+
 	private:
 		using msg_process_handle = actor::msg_process_handle;
 
@@ -88,16 +89,20 @@ namespace romi
 		std::atomic<uint64_t> next_actor_id { 1 };
 		
 		uint64_t engine_id_ = 0;
+		
 		const uint64_t engine_actor_id_ = 0;
+		
 		dispatcher_pool dispatcher_pool_;
+
 		timer timer_;
+		
 		//watcher
 		struct engine_watcher
 		{
 			struct watcher 
 			{
 				uint64_t engine_id_ = 0;
-				timer_id timer_id_ = 0;
+				uint64_t timer_id_= 0;
 				std::set<addr, addr_less> actors_;
 				high_resolution_clock::time_point last_pong_ 
 					= high_resolution_clock::now();
@@ -106,7 +111,7 @@ namespace romi
 			std::map<uint64_t, watcher> watchers_;
 		} engine_watcher_;
 
-		timer_id timer_id_;
+		uint64_t timer_id_;
 
 		net::io_engine io_engine_;
 

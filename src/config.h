@@ -20,7 +20,14 @@ namespace romi
 		int net_heartbeart_interval = 1000;
 		//milliseconds
 		int net_heartbeart_timeout = 5000;
+		
+		//dispatch actor threads
 		//0 for CPU core count
 		int dispatcher_pool_size = 0;
+
+		//threads of engine 's threadpool
+		//it for do long-time jobs
+		//0 for CPU core count
+		int threadpool_threads_ = 0;
 	};
 }

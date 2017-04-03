@@ -237,7 +237,45 @@ namespace romi
 		REGIST_MESSAGE_BUILDER(Message);
 	}
 
+	template<class F, class... Args>
+	std::enable_if_t<std::is_void<typename function_traits<F>::return_type>::value,
+		std::pair<uint64_t, std::future<void>>>
+		actor::add_job(F&& f, Args&&... args)
+	{
+		auto job_id = ++job_id_;
+		auto _send_msg = send_msg_;
+		auto _addr = get_addr();
+		auto job = [f, addr_, _send_msg, job_id](auto &&...params)
+		{
+			f(std::forward<decltype(params)>(params)...);
+			romi::sys::job_done done;
+			done.set_job_id(job_id);
+			_send_msg(make_message(_addr, _addr, done));
+		};
+		return{ job_id, engine_->add_job(std::move(job), std::forward<Args>(args)...) }
+	}
 
+
+	template<class F, class... Args>
+	std::enable_if_t<!std::is_void<typename function_traits<F>::return_type>::value,
+		std::pair<uint64_t, std::future<typename function_traits<F>::return_type>>>
+		actor::add_job(F&& f, Args&&... args)
+	{
+		auto job_id = ++job_id_;
+		auto _send_msg = send_msg_;
+		auto _addr = get_addr();
+		auto job = [f, _addr, _send_msg, job_id](auto &&...params)
+		{
+			auto ret = f(std::forward<decltype(params)>(params)...);
+			romi::sys::job_done done;
+			done.set_job_id(job_id);
+			_send_msg(make_message(_addr, _addr, done));
+			return ret;
+		};
+		return{ job_id, engine_->add_job(std::move(job), std::forward<Args>(args)...) };
+
+
+	}
 	//engine
 	template<typename Actor, typename ...Args>
 	inline std::enable_if_t<std::is_base_of<actor, Actor>::value, addr>
@@ -253,5 +291,12 @@ namespace romi
 		engine::send(const addr &from, const addr &to, const T &msg)
 	{
 		send(make_message(from, to, msg));
+	}
+
+	template<class F, class... Args>
+	auto engine::add_job(F&& f, Args&&... args) 
+		->std::future<typename std::result_of<F(Args...)>::type>
+	{
+		return threadpool_->enqueue(std::forward<F>(f), std::forward<Args>(args)...);
 	}
 }

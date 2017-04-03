@@ -131,7 +131,7 @@ namespace raft
 	}
 
 	bool store::get_log(const std::string &name, 
-		uint16_t index, std::string &entry)
+		uint64_t index, std::string &entry)
 	{
 		auto cf_handle = find_log_cf("$" + name, nullptr, index);
 		if (!cf_handle)
@@ -144,7 +144,7 @@ namespace raft
 	bool store::get_first_log(const std::string &name, 
 		uint64_t & index, std::string &entry)
 	{
-		auto cf_map = get_log_cf_map(name);
+		auto &cf_map = get_log_cf_map(name);
 		if (cf_map.empty())
 			return false;
 
@@ -162,7 +162,7 @@ namespace raft
 	bool store::get_last_log(const std::string &name,
 		uint64_t & index, std::string &entry)
 	{
-		auto cf_map = get_log_cf_map(name);
+		auto &cf_map = get_log_cf_map(name);
 		if (cf_map.empty())
 			return false;
 
@@ -193,9 +193,9 @@ namespace raft
 		{
 			auto key = iter->key();
 			auto value = iter->value();
-			auto num = std::strtoull(key.data(), 0, 10);
-			entries.emplace_back(num, value);
-			bytes_ += value.size();
+			uint64_t num = std::strtoull(key.data(), 0, 10);
+			entries.emplace_back(std::make_pair(num, std::string(value.data(),value.size())));
+			bytes_ += (uint32_t)value.size();
 
 			//At least one
 			if (max_bytes < bytes_)
@@ -223,7 +223,7 @@ namespace raft
 			auto key = iter->key();
 			auto value = iter->value();
 			auto num = std::strtoull(key.data(), 0, 10);
-			entries.emplace_back(num, value);
+			entries.emplace_back(std::make_pair(num, std::string(value.data(), value.size())));
 			if (count < entries.size())
 				return true;
 		}
@@ -233,9 +233,38 @@ namespace raft
 		return true;
 	}
 
+	void store::truncate_suffix(const std::string & name, uint64_t index)
+	{
+		auto &cf_map = get_log_cf_map("$" + name);
+
+		bool find_first_cf_ = false;
+		std::list<uint64_t > to_delete_;
+		for (auto itr = cf_map.begin(); itr != cf_map.end(); )
+		{
+			if (find_first_cf_ == false)
+			{
+				if (index <= itr->first)
+				{
+					auto state = db_->DeleteRange({}, itr->second,
+						std::to_string(index), std::to_string(UINT64_MAX));
+					assert(state.ok());
+					find_first_cf_ = true;
+				}
+				itr++;
+			}
+			else
+			{
+				db_->DropColumnFamily(itr->second);
+				db_->DestroyColumnFamilyHandle(itr->second);
+				to_delete_.push_back(itr->first);
+				itr = cf_map.erase(itr);
+			}
+		}
+	}
+
 	void store::drop_excess_log_cf(const std::string &name, int max_size)
 	{
-		auto cf_map = get_log_cf_map(name);
+		auto &cf_map = get_log_cf_map(name);
 		if (cf_map.size() < max_size)
 			return;
 		do
@@ -272,7 +301,7 @@ namespace raft
 	{
 		rocksdb::ColumnFamilyHandle * cf_handle = nullptr;
 
-		auto cf_map = get_log_cf_map(cf_name);
+		auto &cf_map = get_log_cf_map(cf_name);
 		if (cf_map.empty())
 		{
 			auto state = db_->CreateColumnFamily({}, cf_name, &cf_handle);
@@ -378,6 +407,9 @@ namespace raft
 			}
 		}
 	}
+
+	
+
 }
 }
 

@@ -24,6 +24,12 @@ private:
 
 		increase_dispather(10);
 		std::cout << "dispather count:" << get_dispatcher_size() << std::endl;
+
+		auto func = [](int a) {
+			return a;
+		};
+		auto f = add_job(to_function(func), 1);
+		f.second.get();
 	}
 };
 

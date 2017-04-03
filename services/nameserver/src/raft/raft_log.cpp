@@ -1,6 +1,6 @@
 #include <romi.hpp>
 #include <raft.pb.h>
-#include <raft_log.h>
+#include <node.h>
 #include <store.h>
 
 namespace romi
@@ -68,6 +68,11 @@ namespace raft
 		std::list<std::pair<uint64_t, std::string>> &entries)
 	{
 		return store::get_instance().get_logs(raft_id_, index, count, entries);
+	}
+
+	void raft_log::truncate_suffix(const std::string &raft_id, uint64_t index)
+	{
+		store::get_instance().truncate_suffix(raft_id, index);
 	}
 
 }

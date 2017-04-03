@@ -7,6 +7,7 @@ namespace romi
 	constexpr uint64_t g_nameserver_actor_id = 1;
 	constexpr uint64_t nameserver_engine_id = 1;
 	engine::engine()
+		:threadpool_()
 	{
 	}
 	engine::~engine()
@@ -154,6 +155,7 @@ namespace romi
 		init_message_builder();
 		init_message_handle();
 		timer_.start();
+		threadpool_.reset(new threadpool(config_.threadpool_threads_));
 		dispatcher_pool_.start(config_.dispatcher_pool_size);
 		io_engine_.bind(config_.net_bind_addr_);
 		io_engine_.start();

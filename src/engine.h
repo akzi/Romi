@@ -19,11 +19,16 @@ namespace romi
 		std::enable_if_t<std::is_base_of<::google::protobuf::Message, T>::value>
 			send(const addr &from, const addr &to, const T &msg);
 
+		template<class F, class... Args>
+		auto add_job(F&& f, Args&&... args)
+			-> std::future<typename std::result_of<F(Args...)>::type>;
+
 		void set_config(config cfg);
 
 		void start();
 
 		void stop();
+
 
 	private:
 		using msg_process_handle = actor::msg_process_handle;
@@ -96,6 +101,7 @@ namespace romi
 
 		timer timer_;
 		
+		std::unique_ptr<threadpool> threadpool_;
 		//watcher
 		struct engine_watcher
 		{

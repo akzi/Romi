@@ -8,12 +8,16 @@
 #include <atomic>
 #include <memory>
 #include <stdint.h>
-#include <type_traits>
 #include <iostream>
 #include <queue>
 #include <cassert>
 #include <string>
+#include <future>
+#include <type_traits>
 #include <stdexcept>
+#include <functional>
+#include <condition_variable>
+
 
 #include "romi.pb.h"
 #include "romi.sys.pb.h"
@@ -23,6 +27,7 @@
 #include "function_traits.hpp"
 #include "config.h"
 #include "lock_queue.hpp"
+#include "threadpool.hpp"
 #include "timer.hpp"
 #include "message.hpp"
 #include "message_builder.hpp"

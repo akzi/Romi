@@ -142,6 +142,7 @@
     <ClInclude Include="..\..\..\src\romi.hpp" />
     <ClInclude Include="..\..\..\src\romi.pb.h" />
     <ClInclude Include="..\..\..\src\romi.sys.pb.h" />
+    <ClInclude Include="..\..\..\src\threadpool.hpp" />
     <ClInclude Include="..\..\..\src\timer.hpp" />
   </ItemGroup>
   <ItemGroup>

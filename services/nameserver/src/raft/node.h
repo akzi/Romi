@@ -1,4 +1,10 @@
 #pragma once
+#include <fstream>
+#include "romi.hpp"
+#include "raft.pb.h"
+#include "raft_log.h"
+#include "raft_log.h"
+
 
 namespace romi
 {
@@ -27,6 +33,8 @@ namespace raft
 
 		virtual void make_snapshot_callback(uint64_t last_include_term, uint64_t last_include_index);
 
+		virtual void new_snapshot_callback(raft::snapshot_info info, std::string &filepath);
+
 		virtual bool support_snapshot();
 
 		bool is_leader();
@@ -45,19 +53,21 @@ namespace raft
 			high_resolution_clock::time_point last_heartbeat_time_;
 			uint64_t heartbeat_uint64_t_ = 0;
 			std::set<uint64_t> req_ids_;
+			std::ifstream snapshot_;
+			raft::snapshot_info snapshot_info_;
 		};
 
 		void receive(const addr &from, const romi::raft::vote_request &message);
-
-		void receive(const addr &from, const raft::install_snapshot_response &resp);
-
-		void receive(const addr &from, const raft::install_snapshot_request &resp);
 
 		void receive(const addr &from, const raft::vote_response& resp);
 
 		void receive(const addr &from, const raft::replicate_log_entries_request &resp);
 
 		void receive(const addr &from, const raft::replicate_log_entries_response &req);
+
+		void receive(const addr &from, const raft::install_snapshot_response &resp);
+
+		void receive(const addr &from, const raft::install_snapshot_request &req);
 
 		//
 		void connect_node();
@@ -96,7 +106,11 @@ namespace raft
 
 		void check_commit_log_entries(const std::string &raft_id, uint64_t match_index);
 		
-		bool install_snapshot(peer & _peer);
+		bool try_install_snapshot(peer & _peer);
+
+		void do_install_snapshot(peer &_peer ,const std::string &snashot);
+	
+		void send_install_snapshot(peer &_peer);
 
 		void set_heartbeat_timer(peer &_peer);
 
@@ -138,6 +152,10 @@ namespace raft
 			std::set<std::string> peer_replicated_;
 		};
 		std::list<wait_for_commit> wait_for_commits_;
+
+		std::string snapshot_filepath_;
+		std::ofstream snapshot_;
+		raft::snapshot_info snapshot_info_;
 	};
 	
 }

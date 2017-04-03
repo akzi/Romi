@@ -52,7 +52,7 @@ namespace raft
 
 		bool get_log(
 			const std::string &name,
-			uint16_t index, std::string &entry);
+			uint64_t  index, std::string &entry);
 
 		bool get_first_log(
 			const std::string &name,
@@ -75,6 +75,9 @@ namespace raft
 			uint64_t index,
 			uint32_t count,
 			std::list<std::pair<uint64_t, std::string>> &entries);
+
+		void truncate_suffix(const std::string & name, 
+			uint64_t index);
 
 	private:
 		store(const std::string &db_path);
@@ -99,6 +102,7 @@ namespace raft
 		rocksdb::ColumnFamilyHandle *
 			get_data_cf(const std::string &cf_name);
 
+		
 		// log entries in one ColumnFamily 
 		uint64_t max_log_entries_size_ = 1024 * 10;
 

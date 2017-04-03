@@ -50,16 +50,21 @@ message replicate_log_entries_response
 	bool success = 4;
 };
 
+message snapshot_info
+{
+	fixed64 last_snapshot_index = 1;
+	fixed64 last_included_term = 2;
+}
+
 message install_snapshot_request
 {
 	uint64 req_id = 1;
 	uint64 term = 2;
-	uint64 last_snapshot_index = 3;
-	uint64 last_included_term = 4;
-	uint64 offset = 5;
-	bool done = 6;
-	string leader_id = 7;
-	string data = 8 ;
+	snapshot_info snapshot_info = 3;
+	uint64 offset = 4;
+	bool done = 5;
+	string leader_id = 6;
+	string data = 7 ;
 };
 
 message install_snapshot_response

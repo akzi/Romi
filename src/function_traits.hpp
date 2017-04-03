@@ -11,6 +11,7 @@ namespace romi
 	{
 		enum { arity = sizeof...(Args)};
 		typedef std::function<Ret(Args...)> stl_function_type;
+		typedef Ret return_type;
 		using tuple_type = std::tuple<typename std::remove_reference<typename std::remove_const<Args>::type>::type...>;
 		
 		template<int index>

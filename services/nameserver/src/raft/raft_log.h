@@ -25,7 +25,8 @@ namespace raft
 			const std::list<std::pair<uint64_t, std::string>> & entries);
 
 		void write_raft_log(
-			const std::string &raft_id, std::pair<uint64_t, std::string> & entry);
+			const std::string &raft_id, 
+			std::pair<uint64_t, std::string> & entry);
 
 
 
@@ -34,6 +35,9 @@ namespace raft
 			uint64_t index, 
 			uint32_t count, 
 			std::list<std::pair<uint64_t, std::string>> &entries);
+
+
+		void truncate_suffix(const std::string &raft_id, uint64_t index);
 	};
 }
 }

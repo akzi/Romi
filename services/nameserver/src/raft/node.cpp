@@ -1,8 +1,5 @@
-#include <random>
-#include "romi.hpp"
-#include "raft.pb.h"
-#include "raft_log.h"
 #include "node.h"
+#include <random>
 #include <assert.h>
 
 namespace romi
@@ -57,6 +54,11 @@ namespace romi
 			assert(false);
 		}
 
+		void node::new_snapshot_callback(raft::snapshot_info info, std::string &filepath)
+		{
+
+		}
+
 		uint64_t node::replicate(const std::string &msg)
 		{
 			assert(is_leader());
@@ -75,7 +77,7 @@ namespace romi
 
 		void node::connect_node()
 		{
-			for (auto itr : peers_)
+			for (auto &itr:peers_)
 			{
 				sys::net_connect connect_;
 				connect_.set_engine_id(itr.second.addr_.engine_id());
@@ -165,7 +167,7 @@ namespace romi
 		}
 		void node::replicate_log_entry()
 		{
-			for (auto itr : peers_)
+			for (auto &itr:peers_)
 			{
 				replicate_log_entry(itr.second);
 			}
@@ -183,7 +185,7 @@ namespace romi
 			if (!req.entries_size()  && 
 				_peer.next_index_ < last_log_index_)
 			{
-				if (install_snapshot(_peer))
+				if (try_install_snapshot(_peer))
 				{
 					if (_peer.heartbeat_uint64_t_)
 					{
@@ -203,7 +205,7 @@ namespace romi
 
 			set_heartbeat_timer(_peer);
 		}
-		bool node::install_snapshot(peer & _peer)
+		bool node::try_install_snapshot(peer & _peer)
 		{
 			if (!support_snapshot())
 				return false;
@@ -213,6 +215,56 @@ namespace romi
 				make_snapshot_callback(last_log_term_, last_log_index_);
 				return false;
 			}
+			do_install_snapshot(_peer, path);
+			return true;
+		}
+
+		void node::do_install_snapshot(peer &_peer, const std::string &snashot)
+		{
+			if (_peer.snapshot_)
+				_peer.snapshot_.close();
+
+			_peer.snapshot_.open(snashot, 
+				std::ios::binary | std::ios::beg);
+			assert(_peer.snapshot_.good());
+
+			std::string header;
+			char len[sizeof(uint32_t)];
+			uint8_t *plen = (uint8_t*)len;
+			_peer.snapshot_.read(len, sizeof(uint32_t));
+			assert(_peer.snapshot_.good());
+			header.resize(decode_uint32(plen));
+
+			_peer.snapshot_.read(const_cast<char*>(header.data()), header.size());
+			assert(_peer.snapshot_.good());
+			_peer.snapshot_.seekg(0, std::ios::beg);
+
+			_peer.snapshot_info_.ParseFromString(header);
+
+			send_install_snapshot(_peer);
+		}
+
+		void node::send_install_snapshot(peer &_peer)
+		{
+			const int max_len = 1024 * 1024;
+
+			raft::install_snapshot_request req;
+			
+			req.mutable_snapshot_info()->CopyFrom(_peer.snapshot_info_);
+			req.set_leader_id(raft_id_);
+			req.set_term(current_term_);
+			req.set_req_id(gen_req_id());
+			req.set_offset(_peer.snapshot_.tellg());
+			
+			auto buffer = req.mutable_data();
+			buffer->resize(max_len);
+			_peer.snapshot_.read(const_cast<char*>(buffer->data()), buffer->size());
+			buffer->resize(_peer.snapshot_.gcount());
+			req.set_done(buffer->size() != max_len);
+			if (req.done())
+				_peer.snapshot_.close();
+
+			send(_peer.addr_, req);
 		}
 
 		void node::set_heartbeat_timer(peer &_peer)
@@ -447,13 +499,40 @@ namespace romi
 		void node::receive(const addr &from, 
 			const raft::install_snapshot_response &resp)
 		{
+			if (state_ != e_leader)
+				return;
+			auto itr = peers_.find(from);
+			if (itr == peers_.end())
+				return;
+			auto &_peer = itr->second;
 
+			if (resp.bytes_stored() != _peer.snapshot_.tellg())
+			{
+				if (_peer.snapshot_.is_open())
+					_peer.snapshot_.seekg(resp.bytes_stored());
+			}
+
+			if (_peer.snapshot_.is_open())
+				send_install_snapshot(_peer);
+			else
+				replicate_log_entry(_peer);
 		}
 
 		void node::receive(const addr &from,
-			const raft::install_snapshot_request &resp)
+			const raft::install_snapshot_request &req)
 		{
+			if (snapshot_filepath_.empty())
+			{
+				new_snapshot_callback(req.snapshot_info(), snapshot_filepath_);
+				snapshot_.open(snapshot_filepath_);
+				assert(snapshot_.good());
+			}
+			uint64_t pos = snapshot_.tellp();
+			if (pos != req.ByteSize())
+			{
 
+			}
+			snapshot_.write(req.data().data(), req.data().size());
 		}
 
 		uint64_t node::gen_req_id()
@@ -475,7 +554,7 @@ namespace romi
 
 		void node::log_truncate_suffix(uint64_t index)
 		{
-
+			log_.truncate_suffix(raft_id_, index);
 		}
 
 		void node::write_raft_log(
@@ -530,7 +609,6 @@ namespace romi
 				++itr;
 			}
 		}
-
 	}
 }
 

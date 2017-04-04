@@ -35,6 +35,10 @@ namespace raft
 
 		virtual void new_snapshot_callback(raft::snapshot_info info, std::string &filepath);
 
+		virtual void receive_snashot_file_failed(std::string &filepath);
+
+		virtual void receive_snashot_file_success(std::string &filepath);
+
 		virtual bool support_snapshot();
 
 		bool is_leader();
@@ -74,6 +78,8 @@ namespace raft
 
 		void set_election_timer();
 
+		void reset_election_timer();
+
 		void do_election();
 
 		void cancel_election_timer();
@@ -102,6 +108,7 @@ namespace raft
 		void write_raft_log(const std::list<std::pair<uint64_t, std::string>> &);
 
 		void write_raft_log(const raft::log_entry &entry);
+
 		std::list<raft::log_entry> get_log_entries(uint64_t index, uint64_t count);
 
 		void check_commit_log_entries(const std::string &raft_id, uint64_t match_index);
@@ -141,7 +148,7 @@ namespace raft
 		std::string vote_for_;
 		std::string leader_id_;
 		std::size_t election_timeout_ = 3000;
-		uint64_t election_uint64_t_ = 0;
+		uint64_t election_timer_id_ = 0;
 
 		int max_pipeline_req = 10;
 		raft_log log_;
@@ -158,5 +165,15 @@ namespace raft
 		raft::snapshot_info snapshot_info_;
 	};
 	
+
+	inline bool operator ==(const snapshot_info &left, const snapshot_info &right)
+	{
+		return (left.last_included_term() != right.last_included_term()) ||
+			(left.last_snapshot_index() != right.last_snapshot_index());
+	}
+	inline bool operator !=(const snapshot_info &left, const snapshot_info &right)
+	{
+		return left == right ? false : true;
+	}
 }
 }

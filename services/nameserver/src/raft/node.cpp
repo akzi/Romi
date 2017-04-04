@@ -56,7 +56,17 @@ namespace romi
 
 		void node::new_snapshot_callback(raft::snapshot_info info, std::string &filepath)
 		{
+			assert(false);
+		}
 
+		void node::receive_snashot_file_failed(std::string &filepath)
+		{
+			assert(false);
+		}
+
+		void node::receive_snashot_file_success(std::string &filepath)
+		{
+			assert(false);
 		}
 
 		uint64_t node::replicate(const std::string &msg)
@@ -91,15 +101,26 @@ namespace romi
 			std::random_device rd;
 			std::mt19937 gen(rd());
 			std::uniform_int_distribution<> dis(1, (int)election_timeout_);
-			election_uint64_t_
+			election_timer_id_
 				= set_timer(dis(gen), [this]
 			{
-				if (!election_uint64_t_)
+				if (!election_timer_id_)
 					return false;
 				do_election();
 				set_election_timer();
 				return false;
 			});
+		}
+
+		void node::reset_election_timer()
+		{
+			if (election_timer_id_)
+			{
+				cancel_timer(election_timer_id_);
+				election_timer_id_ = 0;
+			}
+
+			set_election_timer();
 		}
 
 		void node::do_election()
@@ -120,9 +141,9 @@ namespace romi
 		}
 		void node::cancel_election_timer()
 		{
-			if (election_uint64_t_)
-				cancel_timer(election_uint64_t_);
-			election_uint64_t_ = 0;
+			if (election_timer_id_)
+				cancel_timer(election_timer_id_);
+			election_timer_id_ = 0;
 		}
 		void node::set_down(uint64_t term)
 		{
@@ -521,6 +542,13 @@ namespace romi
 		void node::receive(const addr &from,
 			const raft::install_snapshot_request &req)
 		{
+			if (req.snapshot_info() != snapshot_info_)
+			{
+				snapshot_.close();
+				receive_snashot_file_failed(snapshot_filepath_);
+				snapshot_filepath_.clear();
+			}
+
 			if (snapshot_filepath_.empty())
 			{
 				new_snapshot_callback(req.snapshot_info(), snapshot_filepath_);
@@ -528,11 +556,34 @@ namespace romi
 				assert(snapshot_.good());
 			}
 			uint64_t pos = snapshot_.tellp();
-			if (pos != req.ByteSize())
-			{
 
+			install_snapshot_response resp;
+			resp.set_bytes_stored(pos);
+			resp.set_req_id(req.req_id());
+			resp.set_term(current_term_);
+
+			if (pos != req.offset())
+			{
+				reset_election_timer();
+				return send(from, resp);
 			}
+				
+
 			snapshot_.write(req.data().data(), req.data().size());
+			resp.set_bytes_stored(snapshot_.tellp());
+
+			send(from, resp);
+
+			if (req.done())
+			{
+				snapshot_.close();
+				receive_snashot_file_success(snapshot_filepath_);
+				snapshot_filepath_.clear();
+				last_snapshot_term_ = snapshot_info_.last_included_term();
+				last_snapshot_index_ = snapshot_info_.last_snapshot_index();
+				snapshot_info_.Clear();
+			}
+			reset_election_timer();
 		}
 
 		uint64_t node::gen_req_id()
@@ -543,7 +594,7 @@ namespace romi
 		void node::response(const addr &from, 
 			const raft::replicate_log_entries_response &resp)
 		{
-			set_election_timer();
+			reset_election_timer();
 			send(from, resp);
 		}
 
@@ -589,6 +640,7 @@ namespace romi
 
 		void node::init_node()
 		{
+
 			connect_node();
 		}
 

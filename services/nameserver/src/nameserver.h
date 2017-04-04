@@ -50,6 +50,28 @@ namespace romi
 		void get_engine_list(sys::get_engine_list_resp &resp);
 
 		uint64_t unique_id();
+		
+		//from raft
+		virtual void init_node() override;
+
+		virtual void repicate_callback(const std::string & data, uint64_t index) override;
+
+		virtual void commit_callback(uint64_t index) override;
+
+		virtual void no_leader_callback() override;
+
+		virtual std::string get_snapshot_file(uint64_t index) override;
+
+		virtual void make_snapshot_callback(uint64_t last_include_term, uint64_t last_include_index) override;
+
+		virtual void new_snapshot_callback(raft::snapshot_info info, std::string &filepath) override;
+
+		virtual void receive_snashot_file_failed(std::string &filepath) override;
+
+		virtual void receive_snashot_file_success(std::string &filepath) override;
+
+		virtual bool support_snapshot() override;
+
 		uint64_t next_engine_id_ = 0;
 
 		std::map<std::string, engine_info> engine_map_;

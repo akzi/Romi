@@ -177,5 +177,56 @@ namespace romi
 		return std::chrono::high_resolution_clock::now()
 			.time_since_epoch().count() + next_engine_id_;
 	}
+
+	void nameserver::init_node()
+	{
+		throw std::logic_error("The method or operation is not implemented.");
+	}
+
+	void nameserver::repicate_callback(const std::string & data, uint64_t index)
+	{
+		throw std::logic_error("The method or operation is not implemented.");
+	}
+
+	void nameserver::commit_callback(uint64_t index)
+	{
+		throw std::logic_error("The method or operation is not implemented.");
+	}
+
+	void nameserver::no_leader_callback()
+	{
+		throw std::logic_error("The method or operation is not implemented.");
+	}
+
+	std::string nameserver::get_snapshot_file(uint64_t index)
+	{
+		throw std::logic_error("The method or operation is not implemented.");
+	}
+
+	void nameserver::make_snapshot_callback(uint64_t last_include_term, uint64_t last_include_index)
+	{
+		throw std::logic_error("The method or operation is not implemented.");
+	}
+
+	void nameserver::new_snapshot_callback(raft::snapshot_info info, std::string &filepath)
+	{
+		throw std::logic_error("The method or operation is not implemented.");
+	}
+
+	void nameserver::receive_snashot_file_failed(std::string &filepath)
+	{
+		throw std::logic_error("The method or operation is not implemented.");
+	}
+
+	void nameserver::receive_snashot_file_success(std::string &filepath)
+	{
+		throw std::logic_error("The method or operation is not implemented.");
+	}
+
+	bool nameserver::support_snapshot()
+	{
+		throw std::logic_error("The method or operation is not implemented.");
+	}
+
 }
 

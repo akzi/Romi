@@ -1,5 +1,6 @@
 #include "nameserver.h"
 #include <random>
+#include <filesystem>
 
 namespace romi
 {
@@ -28,6 +29,7 @@ namespace romi
 	{
 		regist_message();
 		init_node(config_.raft_node_cfg_);
+		snapshot_path_ = config_.snapshot_dir_;
 	}
 
 
@@ -72,25 +74,33 @@ namespace romi
 			resp.set_result(sys::e_no_leader);
 			return send(from, resp);
 		}
-
-		resp.set_result(sys::e_true);
-
-		if (info.engine_id() == 0)
+		replicate(req.SerializeAsString(), [=](bool status) mutable
 		{
-			auto engine_id = unique_id();
-			info.set_engine_id(engine_id);
-			resp.set_engine_id(engine_id);
-		}
-		sys::net_connect net_connect;
-		net_connect.set_engine_id(info.engine_id());
-		net_connect.set_remote_addr(req.engine_info().net_addr());
-		connect(net_connect);
+			if (!status)
+			{
+				resp.set_result(sys::e_no_leader);
+				return send(from, resp);
+			}
 
-		regist_engine(info);
+			resp.set_result(sys::e_true);
 
-		addr to = from;
-		to.set_engine_id(resp.engine_id());
-		send(to, resp);
+			if (info.engine_id() == 0)
+			{
+				auto engine_id = unique_id();
+				info.set_engine_id(engine_id);
+				resp.set_engine_id(engine_id);
+			}
+			sys::net_connect net_connect;
+			net_connect.set_engine_id(info.engine_id());
+			net_connect.set_remote_addr(req.engine_info().net_addr());
+			connect(net_connect);
+
+			regist_engine(info);
+
+			addr to = from;
+			to.set_engine_id(resp.engine_id());
+			send(to, resp);
+		});
 	}
 
 	void nameserver::receive(const addr &from, const sys::regist_actor_req &req)
@@ -191,47 +201,40 @@ namespace romi
 
 	void nameserver::repicate_callback(const std::string & data, uint64_t index)
 	{
-		throw std::logic_error("The method or operation is not implemented.");
-	}
 
-	void nameserver::commit_callback(uint64_t index)
-	{
-		throw std::logic_error("The method or operation is not implemented.");
-	}
-
-	void nameserver::no_leader_callback()
-	{
-		throw std::logic_error("The method or operation is not implemented.");
 	}
 
 	std::string nameserver::get_snapshot_file(uint64_t index)
 	{
-		throw std::logic_error("The method or operation is not implemented.");
-	}
 
-	void nameserver::make_snapshot_callback(uint64_t last_include_term, uint64_t last_include_index)
-	{
-		throw std::logic_error("The method or operation is not implemented.");
 	}
 
 	void nameserver::new_snapshot_callback(raft::snapshot_info info, std::string &filepath)
 	{
-		throw std::logic_error("The method or operation is not implemented.");
+		if (current_build_snapshot_ == info)
+			return;
+		current_build_snapshot_ = info;
+
 	}
 
 	void nameserver::receive_snashot_file_failed(std::string &filepath)
 	{
-		throw std::logic_error("The method or operation is not implemented.");
+
 	}
 
 	void nameserver::receive_snashot_file_success(std::string &filepath)
 	{
-		throw std::logic_error("The method or operation is not implemented.");
+
 	}
 
 	bool nameserver::support_snapshot()
 	{
-		throw std::logic_error("The method or operation is not implemented.");
+		return true;
+	}
+
+	void nameserver::make_snapshot_callback(raft::snapshot_info info)
+	{
+
 	}
 
 }

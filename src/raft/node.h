@@ -37,18 +37,14 @@ namespace raft
 
 		bool is_leader();
 
-		uint64_t replicate(const std::string &msg);
+		uint64_t replicate(const std::string &msg, std::function<void (bool)> commit_handle);
 
 	protected:
 		virtual void repicate_callback(const std::string & data, uint64_t index);
 
-		virtual void commit_callback(uint64_t index);
-
-		virtual void no_leader_callback();
-
 		virtual std::string get_snapshot_file(uint64_t index);
 
-		virtual void make_snapshot_callback(uint64_t last_include_term, uint64_t last_include_index);
+		virtual void make_snapshot_callback(raft::snapshot_info info);
 
 		virtual void new_snapshot_callback(raft::snapshot_info info, std::string &filepath);
 
@@ -169,6 +165,7 @@ namespace raft
 		struct wait_for_commit
 		{
 			uint64_t index_;
+			std::function<void(bool)> commit_handle_;
 			std::set<std::string> peer_replicated_;
 		};
 		std::list<wait_for_commit> wait_for_commits_;

@@ -51,13 +51,9 @@ namespace romi
 		
 		virtual void repicate_callback(const std::string & data, uint64_t index) override;
 
-		virtual void commit_callback(uint64_t index) override;
-
-		virtual void no_leader_callback() override;
-
 		virtual std::string get_snapshot_file(uint64_t index) override;
 
-		virtual void make_snapshot_callback(uint64_t last_include_term, uint64_t last_include_index) override;
+		virtual void make_snapshot_callback(raft::snapshot_info info) override;
 
 		virtual void new_snapshot_callback(raft::snapshot_info info, std::string &filepath) override;
 
@@ -67,15 +63,16 @@ namespace romi
 
 		virtual bool support_snapshot() override;
 
-		uint64_t next_engine_id_ = 0;
+	private:
 
+		uint64_t next_engine_id_ = 0;
 		std::map<std::string, engine_info> engine_map_;
 		std::map<std::string, actor_info> actor_names_;
-
 		nameserver_config config_;
 
-		uint64_t req_id_ = 1;
-	protected:
+		raft::snapshot_info current_build_snapshot_;
 
+		std::map<uint64_t, std::string> snapshots_;
+		std::string snapshot_path_;
 	};
 }

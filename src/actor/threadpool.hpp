@@ -43,7 +43,6 @@ inline threadpool::threadpool(size_t threads)
 				task = std::move(this->tasks.front());
 				this->tasks.pop();
 			}
-
 			task();
 		}
 	}

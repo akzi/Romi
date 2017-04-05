@@ -190,7 +190,7 @@ namespace romi
 		{
 			if (const auto ptr = msg->get<sys::timer_expire>())
 			{
-				timer_expire(ptr->uint64_t());
+				timer_expire(ptr->timer_id());
 			}
 		});
 

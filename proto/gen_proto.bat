@@ -17,7 +17,7 @@ echo %%s
 
 for /R %%s in (*.pb.*) do (
 echo %%s
-copy %%s ..\src\
+copy %%s ..\src\proto_gen
 ) 
 
 

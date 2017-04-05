@@ -17,6 +17,6 @@ message actor_info
 message engine_info
 {
 	uint64 engine_id = 1;
-	string addr = 2;
-	string name = 3;
+	string net_addr = 2;
+	string engine_name = 3;
 };

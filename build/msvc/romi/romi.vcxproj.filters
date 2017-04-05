@@ -1,106 +1,131 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="源文件">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="头文件">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
-    </Filter>
     <Filter Include="资源文件">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\..\src\function_traits.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\impl.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\io_engine.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\lock_queue.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\message.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\message_builder.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\romi.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\romi.pb.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\romi.sys.pb.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\timer.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\actor.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\addr_less.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\config.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\dispatcher.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\dispatcher_pool.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\engine.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\exceptions.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\threadpool.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\..\src\io_engine.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\romi.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\romi.pb.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\romi.sys.pb.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\timer.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\actor.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\dispatcher.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\dispatcher_pool.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\engine.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
+    <Filter Include="raft">
+      <UniqueIdentifier>{fff33f95-706b-49d4-94f7-6dce16ce937e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="actor">
+      <UniqueIdentifier>{8161630e-b121-42a0-96d1-1fe40e173a66}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="proto_gen">
+      <UniqueIdentifier>{37427058-f097-453b-bf46-9a3d1181fa84}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\proto\romi.proto" />
     <None Include="..\..\..\proto\romi.sys.proto" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\actor\dispatcher_pool.cpp">
+      <Filter>actor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\actor\engine.cpp">
+      <Filter>actor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\actor\io_engine.cpp">
+      <Filter>actor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\actor\romi.cpp">
+      <Filter>actor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\actor\timer.cpp">
+      <Filter>actor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\actor\actor.cpp">
+      <Filter>actor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\actor\dispatcher.cpp">
+      <Filter>actor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\raft\raft_log.cpp">
+      <Filter>raft</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\raft\store.cpp">
+      <Filter>raft</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\raft\node.cpp">
+      <Filter>raft</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\proto_gen\romi.sys.pb.cc">
+      <Filter>proto_gen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\proto_gen\romi.pb.cc">
+      <Filter>proto_gen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\proto_gen\romi.raft.pb.cc">
+      <Filter>proto_gen</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\actor\dispatcher_pool.h">
+      <Filter>actor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\actor\engine.h">
+      <Filter>actor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\actor\exceptions.hpp">
+      <Filter>actor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\actor\function_traits.hpp">
+      <Filter>actor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\actor\impl.hpp">
+      <Filter>actor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\actor\io_engine.h">
+      <Filter>actor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\actor\lock_queue.hpp">
+      <Filter>actor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\actor\message.hpp">
+      <Filter>actor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\actor\message_builder.hpp">
+      <Filter>actor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\actor\romi.hpp">
+      <Filter>actor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\actor\threadpool.hpp">
+      <Filter>actor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\actor\timer.hpp">
+      <Filter>actor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\actor\actor.h">
+      <Filter>actor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\actor\addr_less.hpp">
+      <Filter>actor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\actor\config.h">
+      <Filter>actor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\actor\dispatcher.h">
+      <Filter>actor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\raft\raft_log.h">
+      <Filter>raft</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\raft\store.h">
+      <Filter>raft</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\raft\node.h">
+      <Filter>raft</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\proto_gen\romi.raft.pb.h">
+      <Filter>proto_gen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\proto_gen\romi.sys.pb.h">
+      <Filter>proto_gen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\proto_gen\romi.pb.h">
+      <Filter>proto_gen</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -444,9 +444,9 @@ namespace romi
 		connect(config_.nameserver_engine_id_, config_.nameserver_addr_);
 		
 		sys::regist_engine_req req;
-		req.mutable_engine_info()->set_addr(config_.net_bind_addr_);
+		req.mutable_engine_info()->set_net_addr(config_.net_bind_addr_);
 		req.mutable_engine_info()->set_engine_id(0);
-		req.mutable_engine_info()->set_name(config_.engine_name_);
+		req.mutable_engine_info()->set_engine_name(config_.engine_name_);
 
 		addr from;
 		addr to;

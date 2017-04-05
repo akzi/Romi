@@ -5,7 +5,7 @@
   <PropertyGroup />
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\deps\protobuf\include;$(SolutionDir)..\..\..\deps\zeromq4-x\include;$(SolutionDir)..\..\..\src;$(SolutionDir)..\..\..\services\nameserver\src;$(SolutionDir)..\..\..\services\nameserver\src\raft;$(SolutionDir)..\..\..\deps\rocksdb\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\deps\protobuf\include;$(SolutionDir)..\..\..\deps\zeromq4-x\include;$(SolutionDir)..\..\..\src\actor;$(SolutionDir)..\..\..\src\proto_gen;$(SolutionDir)..\..\..\src\raft;$(SolutionDir)..\..\..\services\nameserver\src;$(SolutionDir)..\..\..\services\nameserver\src\raft;$(SolutionDir)..\..\..\deps\rocksdb\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>

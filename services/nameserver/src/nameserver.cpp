@@ -27,7 +27,7 @@ namespace romi
 	void nameserver::init()
 	{
 		regist_message();
-		init_node();
+		init_node(config_.raft_node_cfg_);
 	}
 
 
@@ -48,10 +48,15 @@ namespace romi
 	{
 		actor_info info;
 		sys::find_actor_resp resp;
+		if (!is_leader())
+		{
+			resp.set_result(sys::e_no_leader);
+			return send(from, resp);
+		}
 
-		resp.set_find(false);
+		resp.set_result(sys::e_false);
 		if (find_actor(req.name(), info))
-			resp.set_find(true);
+			resp.set_result(sys::e_true);
 		*resp.mutable_actor_info() = info;
 		*resp.mutable_req() = req;
 		send(from, resp);
@@ -62,7 +67,13 @@ namespace romi
 		sys::regist_engine_resp resp;
 		auto info = req.engine_info();
 
-		resp.set_result(true);
+		if (!is_leader())
+		{
+			resp.set_result(sys::e_no_leader);
+			return send(from, resp);
+		}
+
+		resp.set_result(sys::e_true);
 
 		if (info.engine_id() == 0)
 		{
@@ -70,7 +81,11 @@ namespace romi
 			info.set_engine_id(engine_id);
 			resp.set_engine_id(engine_id);
 		}
-		connect_engine(info);
+		sys::net_connect net_connect;
+		net_connect.set_engine_id(info.engine_id());
+		net_connect.set_remote_addr(req.engine_info().net_addr());
+		connect(net_connect);
+
 		regist_engine(info);
 
 		addr to = from;
@@ -81,11 +96,17 @@ namespace romi
 	void nameserver::receive(const addr &from, const sys::regist_actor_req &req)
 	{
 		sys::regist_actor_resp resp;
+		if (!is_leader())
+		{
+			resp.set_result(sys::e_no_leader);
+			return send(from, resp);
+		}
+		
 		auto info = req.actor_info();
 		if (!find_actor(info.name(), info))
 		{
 			regist_actor(info);
-			resp.set_result(sys::regist_actor_result::OK);
+			resp.set_result(sys::e_true);
 		}
 		watch(from);
 		send(from, resp);
@@ -96,16 +117,6 @@ namespace romi
 		unregist_actor(msg.addr());
 	}
 
-
-	void nameserver::connect_engine(const romi::engine_info& engine_info)
-	{
-		sys::net_connect msg;
-		msg.mutable_from()->CopyFrom(get_addr());
-		msg.mutable_remote_addr()->append(engine_info.addr());
-		msg.set_engine_id(engine_info.engine_id());
-
-		connect(msg);
-	}
 
 	void nameserver::get_engine_list(sys::get_engine_list_resp &resp)
 	{
@@ -146,7 +157,7 @@ namespace romi
 
 	void nameserver::regist_engine(const engine_info &engine)
 	{
-		engine_map_[engine.name()] = engine;
+		engine_map_[engine.engine_name()] = engine;
 	}
 
 	bool nameserver::find_engine(const std::string &name, engine_info &engine)
@@ -176,11 +187,6 @@ namespace romi
 		next_engine_id_++;
 		return std::chrono::high_resolution_clock::now()
 			.time_since_epoch().count() + next_engine_id_;
-	}
-
-	void nameserver::init_node()
-	{
-		throw std::logic_error("The method or operation is not implemented.");
 	}
 
 	void nameserver::repicate_callback(const std::string & data, uint64_t index)

@@ -1,7 +1,7 @@
 #pragma once
 #include <fstream>
 #include "romi.hpp"
-#include "raft.pb.h"
+#include "romi.raft.pb.h"
 #include "raft_log.h"
 #include "raft_log.h"
 
@@ -13,6 +13,18 @@ namespace raft
 	class node : public actor
 	{
 	public:
+		struct config 
+		{
+			struct node_info 
+			{
+				std::string net_addr_;
+				addr addr_;
+				std::string raft_id_;
+			};
+			std::list<node_info> others_;
+			std::string raft_id_;
+			std::string store_path_;
+		};
 		enum state
 		{
 			e_follower,
@@ -21,8 +33,13 @@ namespace raft
 		};
 		node();
 	protected:
-		virtual void init_node();
+		void init_node(config cfg_);
 
+		bool is_leader();
+
+		uint64_t replicate(const std::string &msg);
+
+	protected:
 		virtual void repicate_callback(const std::string & data, uint64_t index);
 
 		virtual void commit_callback(uint64_t index);
@@ -40,11 +57,6 @@ namespace raft
 		virtual void receive_snashot_file_success(std::string &filepath);
 
 		virtual bool support_snapshot();
-
-		bool is_leader();
-
-		uint64_t replicate(const std::string &msg);
-
 	private:
 		struct peer
 		{
@@ -53,9 +65,9 @@ namespace raft
 			std::string raft_id_;
 			uint64_t match_index_ = 0;
 			uint64_t next_index_ = 0;
-			uint64_t heatbeat_inteval_ = 3000;
+			int64_t heartbeat_inteval_ = 3000;
 			high_resolution_clock::time_point last_heartbeat_time_;
-			uint64_t heartbeat_uint64_t_ = 0;
+			uint64_t heartbeat_timer_id_ = 0;
 			std::set<uint64_t> req_ids_;
 			std::ifstream snapshot_;
 			raft::snapshot_info snapshot_info_;
@@ -151,6 +163,7 @@ namespace raft
 		uint64_t election_timer_id_ = 0;
 
 		int max_pipeline_req = 10;
+		
 		raft_log log_;
 
 		struct wait_for_commit

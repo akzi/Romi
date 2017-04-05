@@ -21,21 +21,10 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\..\services\nameserver\src\main.cpp" />
     <ClCompile Include="..\..\..\..\services\nameserver\src\nameserver.cpp" />
-    <ClCompile Include="..\..\..\..\services\nameserver\src\raft.pb.cc" />
-    <ClCompile Include="..\..\..\..\services\nameserver\src\raft\store.cpp" />
-    <ClCompile Include="..\..\..\..\services\nameserver\src\raft\node.cpp" />
-    <ClCompile Include="..\..\..\..\services\nameserver\src\raft\raft_log.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\services\nameserver\src\nameserver.h" />
     <ClInclude Include="..\..\..\..\services\nameserver\src\nameserver_config.hpp" />
-    <ClInclude Include="..\..\..\..\services\nameserver\src\raft.pb.h" />
-    <ClInclude Include="..\..\..\..\services\nameserver\src\raft\store.h" />
-    <ClInclude Include="..\..\..\..\services\nameserver\src\raft\node.h" />
-    <ClInclude Include="..\..\..\..\services\nameserver\src\raft\raft_log.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\..\..\services\nameserver\proto\raft.proto" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{95877DBB-65EB-4A13-9B7E-1EDA41BBAF02}</ProjectGuid>

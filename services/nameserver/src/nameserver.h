@@ -1,7 +1,7 @@
 #pragma once
 #include "romi.hpp"
-#include "raft.pb.h"
-#include "raft/node.h"
+#include "romi.raft.pb.h"
+#include "node.h"
 #include "nameserver_config.hpp"
 
 namespace romi
@@ -45,15 +45,10 @@ namespace romi
 
 		bool find_engine(const std::string &name, engine_info &engine);
 
-		void connect_engine(const ::romi::engine_info& engine_info);
-
 		void get_engine_list(sys::get_engine_list_resp &resp);
 
 		uint64_t unique_id();
 		
-		//from raft
-		virtual void init_node() override;
-
 		virtual void repicate_callback(const std::string & data, uint64_t index) override;
 
 		virtual void commit_callback(uint64_t index) override;
@@ -80,5 +75,7 @@ namespace romi
 		nameserver_config config_;
 
 		uint64_t req_id_ = 1;
+	protected:
+
 	};
 }

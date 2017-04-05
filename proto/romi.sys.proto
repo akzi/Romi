@@ -58,7 +58,7 @@ message engine_offline
 //timer
 message timer_expire 
 { 
-	uint64 uint64_t = 1; 
+	uint64 timer_id = 1; 
 };
 
 
@@ -79,52 +79,62 @@ message actor_close
 };
 
 //nameserver
+enum result
+{
+	e_true = 0;
+	e_no_leader = 1;
+	e_false = 2;
+}
 message regist_engine_req
 {
-	engine_info engine_info = 1;
+	uint64 req_id = 1;
+	engine_info engine_info = 2;
 };
 
 message regist_engine_resp
 {
-	uint64 engine_id = 1;
-	bool result = 2;
+	uint64 req_id = 1;
+	uint64 engine_id = 2;
+	result result = 3;
 }
 
 message get_engine_list_req
 {
-	
+	uint64 req_id = 1;
 }
 
 message get_engine_list_resp
 {
-	repeated engine_info engine_info = 1;
+	uint64 req_id = 1;	
+	result result = 2;
+	repeated engine_info engine_info = 3;
 }
 
 message regist_actor_req
 {
-	actor_info actor_info = 1;
-}
-
-enum regist_actor_result
-{
-    OK = 0;
-	EXISTED = 1;
+	uint64 req_id = 1;
+	result result =2;
+	actor_info actor_info = 3;
 }
 
 message regist_actor_resp
 {
-	regist_actor_result result = 1;
+	uint64 req_id = 1;
+	result result = 2;
 }
 
 message find_actor_req
 {
-	string name = 1;
+	uint64 req_id = 1;
+	string name = 2;
+	result result = 3;
 }
 
 message find_actor_resp
 {
-	find_actor_req req = 1;
-	bool find = 2;
-	actor_info actor_info = 3;
+	uint64 req_id = 1;
+	find_actor_req req = 2;
+	result result = 3;
+	actor_info actor_info = 4;
 }
 

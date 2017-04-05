@@ -7,46 +7,18 @@
     <ClCompile Include="..\..\..\..\services\nameserver\src\nameserver.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\services\nameserver\src\raft.pb.cc">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\services\nameserver\src\raft\node.cpp">
-      <Filter>src\raft</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\services\nameserver\src\raft\raft_log.cpp">
-      <Filter>src\raft</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\services\nameserver\src\raft\store.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
       <UniqueIdentifier>{40d9bcac-7e63-44ba-8d67-35310f033b71}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\raft">
-      <UniqueIdentifier>{811a8bfb-5f8f-49eb-816d-4f04ab8aa039}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\services\nameserver\src\nameserver.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\services\nameserver\src\raft.pb.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\services\nameserver\src\nameserver_config.hpp">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\services\nameserver\src\raft\node.h">
-      <Filter>src\raft</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\services\nameserver\src\raft\raft_log.h">
-      <Filter>src\raft</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\services\nameserver\src\raft\store.h">
-      <Filter>src\raft</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\..\..\services\nameserver\proto\raft.proto" />
   </ItemGroup>
 </Project>

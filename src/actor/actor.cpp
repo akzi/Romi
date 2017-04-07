@@ -97,7 +97,7 @@ namespace romi
 		if (msg.engine_id() == addr_.engine_id())
 		{
 			sys::net_connect_notify notify;
-			notify.set_connected(true);
+			notify.set_is_connecting(true);
 			notify.mutable_net_connect()->CopyFrom(msg);
 			send_msg_(make_message(get_engine_addr(), addr_, notify));
 			return;

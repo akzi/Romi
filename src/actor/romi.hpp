@@ -21,6 +21,7 @@
 
 #include "romi.pb.h"
 #include "romi.sys.pb.h"
+#include "romi.nameserver.pb.h"
 
 #include "addr_less.hpp"
 #include "exceptions.hpp"

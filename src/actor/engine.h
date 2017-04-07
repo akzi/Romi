@@ -75,11 +75,21 @@ namespace romi
 
 		void regist_engine();
 
+		void init_nameserver_cluster();
+
+		void init_nameserver_info(addr nameserver_addr);
+
+		void connect_nameserver();
+
+		void find_nameserver_leader();
+
 		msg_process_handle  find_msg_handle(std::string &type);
 
 		void regist_msg_handle(std::string &type, const msg_process_handle &handle);
 
 		void unregist_msg_handle(std::string &type);
+
+		uint64_t gen_req_id();
 
 		config config_;
 
@@ -94,13 +104,9 @@ namespace romi
 		std::atomic<uint64_t> next_actor_id { 1 };
 		
 		uint64_t engine_id_ = 0;
-		
 		const uint64_t engine_actor_id_ = 0;
-		
 		dispatcher_pool dispatcher_pool_;
-
 		timer timer_;
-		
 		std::unique_ptr<threadpool> threadpool_;
 		//watcher
 		struct engine_watcher
@@ -117,12 +123,15 @@ namespace romi
 			std::map<uint64_t, watcher> watchers_;
 		} engine_watcher_;
 
-		uint64_t timer_id_;
 
+		std::atomic_uint64_t req_id_{ 0 };
+		uint64_t timer_id_ = 0;
 		net::io_engine io_engine_;
-
 		std::map<std::string, msg_process_handle> msg_handles_;
+		std::map<addr, nameserver::nameserver_info, addr_less> nameserver_info_;
 
-		bool regist_engine_ = false;
+		addr nameserver_leader_;
+		addr default_nameserver_;
+		addr engine_addr_;
 	};
 }

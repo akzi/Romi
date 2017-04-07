@@ -14,10 +14,20 @@
     <Filter Include="proto_gen">
       <UniqueIdentifier>{37427058-f097-453b-bf46-9a3d1181fa84}</UniqueIdentifier>
     </Filter>
+    <Filter Include="proto">
+      <UniqueIdentifier>{a8a1e9c3-6b91-4672-b8b6-792249b7e06d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\..\proto\romi.proto" />
-    <None Include="..\..\..\proto\romi.sys.proto" />
+    <None Include="..\..\..\proto\romi.proto">
+      <Filter>proto</Filter>
+    </None>
+    <None Include="..\..\..\proto\romi.sys.proto">
+      <Filter>proto</Filter>
+    </None>
+    <None Include="..\..\..\proto\romi.nameserver.proto">
+      <Filter>proto</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\actor\dispatcher_pool.cpp">
@@ -50,13 +60,16 @@
     <ClCompile Include="..\..\..\src\raft\node.cpp">
       <Filter>raft</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\proto_gen\romi.sys.pb.cc">
-      <Filter>proto_gen</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\src\proto_gen\romi.pb.cc">
       <Filter>proto_gen</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\proto_gen\romi.raft.pb.cc">
+      <Filter>proto_gen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\proto_gen\romi.nameserver.pb.cc">
+      <Filter>proto_gen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\proto_gen\romi.sys.pb.cc">
       <Filter>proto_gen</Filter>
     </ClCompile>
   </ItemGroup>
@@ -118,13 +131,16 @@
     <ClInclude Include="..\..\..\src\raft\node.h">
       <Filter>raft</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\src\proto_gen\romi.nameserver.pb.h">
+      <Filter>proto_gen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\proto_gen\romi.pb.h">
+      <Filter>proto_gen</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\src\proto_gen\romi.raft.pb.h">
       <Filter>proto_gen</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\proto_gen\romi.sys.pb.h">
-      <Filter>proto_gen</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\proto_gen\romi.pb.h">
       <Filter>proto_gen</Filter>
     </ClInclude>
   </ItemGroup>

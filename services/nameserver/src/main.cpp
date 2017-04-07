@@ -15,7 +15,7 @@ int main()
 	engine.start();
 
 	romi::nameserver_config nameserver_config;
-	engine.spawn<romi::nameserver>(nameserver_config);
+	engine.spawn<romi::nameserver::node>(nameserver_config);
 
 	getchar();
 	return 0;

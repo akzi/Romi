@@ -43,9 +43,7 @@ namespace romi
 		REGIST_MESSAGE_BUILDER(sys::ping);
 		REGIST_MESSAGE_BUILDER(sys::pong);
 		REGIST_MESSAGE_BUILDER(sys::engine_offline);
-		REGIST_MESSAGE_BUILDER(sys::regist_actor_req);
-		REGIST_MESSAGE_BUILDER(sys::regist_actor_resp);
-		REGIST_MESSAGE_BUILDER(sys::regist_actor_resp);
+	
 		REGIST_MESSAGE_BUILDER(sys::net_connect);
 		REGIST_MESSAGE_BUILDER(sys::net_connect_notify);
 		REGIST_MESSAGE_BUILDER(sys::net_not_actor);
@@ -55,14 +53,22 @@ namespace romi
 		REGIST_MESSAGE_BUILDER(sys::add_watcher);
 		REGIST_MESSAGE_BUILDER(sys::del_watcher);
 		REGIST_MESSAGE_BUILDER(sys::actor_close);
-		REGIST_MESSAGE_BUILDER(sys::regist_engine_req);
-		REGIST_MESSAGE_BUILDER(sys::regist_engine_resp);
-		REGIST_MESSAGE_BUILDER(sys::get_engine_list_req);
-		REGIST_MESSAGE_BUILDER(sys::get_engine_list_resp);
-		REGIST_MESSAGE_BUILDER(sys::regist_actor_req);
-		REGIST_MESSAGE_BUILDER(sys::regist_actor_resp);
-		REGIST_MESSAGE_BUILDER(sys::find_actor_req);
-		REGIST_MESSAGE_BUILDER(sys::find_actor_resp);
+
+		REGIST_MESSAGE_BUILDER(nameserver::check_leader);
+		REGIST_MESSAGE_BUILDER(nameserver::check_leader_result);
+		REGIST_MESSAGE_BUILDER(nameserver::get_cluster_list_req);
+		REGIST_MESSAGE_BUILDER(nameserver::get_cluster_list_resp);
+		REGIST_MESSAGE_BUILDER(nameserver::regist_actor_req);
+		REGIST_MESSAGE_BUILDER(nameserver::regist_actor_resp);
+		REGIST_MESSAGE_BUILDER(nameserver::regist_actor_resp);
+		REGIST_MESSAGE_BUILDER(nameserver::regist_engine_req);
+		REGIST_MESSAGE_BUILDER(nameserver::regist_engine_resp);
+		REGIST_MESSAGE_BUILDER(nameserver::get_engine_list_req);
+		REGIST_MESSAGE_BUILDER(nameserver::get_engine_list_resp);
+		REGIST_MESSAGE_BUILDER(nameserver::regist_actor_req);
+		REGIST_MESSAGE_BUILDER(nameserver::regist_actor_resp);
+		REGIST_MESSAGE_BUILDER(nameserver::find_actor_req);
+		REGIST_MESSAGE_BUILDER(nameserver::find_actor_resp);
 	}
 
 	void engine::init_message_handle()
@@ -146,6 +152,10 @@ namespace romi
 	{
 		config_ = std::move(cfg);
 		engine_id_ = config_.engine_id_;
+		engine_addr_.set_actor_id(engine_actor_id_);
+		engine_addr_.set_engine_id(engine_id_);
+		default_nameserver_.set_engine_id(config_.nameserver_engine_id_);
+		default_nameserver_.set_actor_id(config_.nameserver_actor_id_);
 	}
 
 	void engine::start()
@@ -170,6 +180,7 @@ namespace romi
 			config_.engine_name_.empty() ||
 			config_.is_nameserver_)
 			return;
+		init_nameserver_cluster();
 		regist_engine();
 	}
 
@@ -276,18 +287,26 @@ namespace romi
 
 	void engine::handle_net_msg(message_base::ptr &msg)
 	{
-		if (!regist_engine_)
-			return send(std::move(msg));
-
-		if (get_message_type<sys::regist_engine_resp>() == msg->type())
+		if (msg->to_.engine_id() == engine_id_)
+		{
+			if (const auto _actor = find_actor(msg->to_))
+			{
+				if (_actor->receive_msg(std::move(msg)) == 1)
+				{
+					dispatcher_pool_.dispatch(_actor);
+					return;
+				}
+			}
+		}
+		if (msg->to().actor_id() == engine_actor_id_)
 		{
 			if (auto handle = find_msg_handle(msg->type()))
 			{
-				regist_engine_ = false;
 				handle(msg);
 				return;
 			}
 		}
+		std::cout << "can't " <<msg->type() << " msg handle" << std::endl;
 	}
 
 	void engine::send_to_net(message_base::ptr &message_)
@@ -417,19 +436,15 @@ namespace romi
 
 	void engine::regist_engine()
 	{
-		regist_engine_ = true;
-		if (config_.engine_name_.empty())
-			throw std::runtime_error("config::engine_name_ empty.");
-
-		std::promise<sys::regist_engine_resp> resp_promise;
+		std::promise<nameserver::regist_engine_resp> resp_promise;
 		auto futrue = resp_promise.get_future();
+		auto type = get_message_type<nameserver::regist_engine_resp>();
 
-		regist_msg_handle(get_message_type<sys::regist_engine_resp>(),
-			[&](const message_base::ptr &ptr) 
+		regist_msg_handle(type,[&](const message_base::ptr &ptr) 
 		{
 			try
 			{
-				auto msg = ptr->get<sys::regist_engine_resp>();
+				auto msg = ptr->get<nameserver::regist_engine_resp>();
 				if (!msg)
 					throw std::runtime_error("get<sys::regsit_engine_resp> nullptr");
 
@@ -440,23 +455,13 @@ namespace romi
 				resp_promise.set_exception(std::current_exception());
 			}
 		});
-
-		connect(config_.nameserver_engine_id_, config_.nameserver_addr_);
 		
-		sys::regist_engine_req req;
+		nameserver::regist_engine_req req;
 		req.mutable_engine_info()->set_net_addr(config_.net_bind_addr_);
 		req.mutable_engine_info()->set_engine_id(0);
 		req.mutable_engine_info()->set_engine_name(config_.engine_name_);
 
-		addr from;
-		addr to;
-		from.set_actor_id(engine_actor_id_);
-		from.set_engine_id(engine_id_);
-
-		to.set_engine_id(config_.nameserver_engine_id_);
-		to.set_actor_id(config_.nameserver_actor_id_);
-
-		send(make_message(from, to, req));
+		send(make_message(engine_addr_, nameserver_leader_, req));
 
 		try
 		{
@@ -470,10 +475,109 @@ namespace romi
 		catch (std::exception&e)
 		{
 			std::cout << e.what() << std::endl;
-			unregist_msg_handle(get_message_type<sys::regist_engine_resp>());
+			unregist_msg_handle(get_message_type<nameserver::regist_engine_resp>());
 			throw;
 		}
-		unregist_msg_handle(get_message_type<sys::regist_engine_resp>());
+		unregist_msg_handle(get_message_type<nameserver::regist_engine_resp>());
+	}
+
+	void engine::init_nameserver_cluster()
+	{
+		nameserver_info_.clear();
+		init_nameserver_info(default_nameserver_);
+		find_nameserver_leader();
+	}
+
+	void engine::init_nameserver_info(addr nameserver_addr)
+	{
+		std::promise<nameserver::get_cluster_list_resp> resp_promise;
+		auto future = resp_promise.get_future();
+		auto type = get_message_type<nameserver::get_cluster_list_resp>();
+		auto req_id = req_id_++;
+
+		regist_msg_handle(type, [&](const message_base::ptr &ptr) 
+		{
+			try
+			{
+				auto msg = ptr->get<nameserver::get_cluster_list_resp>();
+				if (!msg)
+					throw std::runtime_error("get<sys::get_engine_list_resp> nullptr");
+				if (msg->req().req_id() != req_id)
+				{
+					return;
+				}
+				resp_promise.set_value(*msg);
+			}
+			catch (...)
+			{
+				resp_promise.set_exception(std::current_exception());
+			}
+		});
+
+		connect(config_.nameserver_engine_id_, config_.nameserver_addr_);
+
+		nameserver::get_cluster_list_req req;
+
+		req.set_req_id(req_id);
+		send(make_message(engine_addr_, nameserver_addr, req));
+
+		auto resp = future.get();
+		for (int i = 0; i < resp.nameserver_info_size();i++)
+		{
+			auto item =  resp.nameserver_info(i);
+			nameserver_info_.emplace(item.addr(), item);
+		}
+	}
+
+	void engine::connect_nameserver()
+	{
+		for (auto &itr : nameserver_info_)
+		{
+			connect(itr.first.engine_id(), itr.second.net_addr());
+		}
+	}
+
+	void engine::find_nameserver_leader()
+	{
+		for (auto &itr : nameserver_info_)
+		{
+			nameserver::check_leader req;
+			std::promise<nameserver::check_leader_result> resp_promise;
+			auto future = resp_promise.get_future();
+			auto req_id = gen_req_id();
+			auto type = get_message_type<nameserver::check_leader_result>();
+			regist_msg_handle(type, [&](const message_base::ptr &ptr) {
+				try
+				{
+					auto msg = ptr->get<nameserver::check_leader_result>();
+					if (!msg)
+						throw std::runtime_error("get<nameserver::check_leader_result> nullptr");
+					if (msg->req_id() != req_id)
+					{
+						return;
+					}
+					resp_promise.set_value(*msg);
+				}
+				catch (...)
+				{
+					resp_promise.set_exception(std::current_exception());
+				}
+			});
+
+			req.set_req_id(req_id);
+			send(make_message(engine_addr_, itr.first, req));
+			auto timeout = future.wait_for(std::chrono::milliseconds(3000));
+			if (timeout == std::future_status::timeout)
+				continue;
+
+			auto resp = future.get();
+			if (resp.is_leader())
+			{
+				nameserver_leader_ = itr.first;
+				return;
+			}
+		}
+		throw std::runtime_error("can't find nameserver leader");
 	}
 
 	engine::msg_process_handle engine::find_msg_handle(std::string &type)
@@ -492,6 +596,11 @@ namespace romi
 	void engine::unregist_msg_handle(std::string &type)
 	{
 		msg_handles_.erase(type);
+	}
+
+	uint64_t engine::gen_req_id()
+	{
+		return req_id_++;
 	}
 
 }

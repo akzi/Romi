@@ -6,73 +6,75 @@
 
 namespace romi
 {
-	
-	class nameserver :public raft::node
+	namespace nameserver
 	{
-	public:
-		nameserver(nameserver_config cfg);
+		class node :public raft::node
+		{
+		public:
+			node(nameserver_config cfg);
 
-		~nameserver();
+			~node();
 
-	private:
+		private:
 
-		virtual void init() override;
+			virtual void init() override;
 
-		void regist_message();
-		//sys
-		void receive(const addr &from, const sys::net_connect_notify &notify);
+			void regist_message();
 
-		void receive(const addr &from, const sys::actor_close &msg);
-		
-		void receive(const addr &from, const sys::regist_actor_req &req);
+			void receive(const addr &from, const sys::net_connect_notify &notify);
 
-		void receive(const addr &from, const sys::regist_engine_req &req);
+			void receive(const addr &from, const sys::actor_close &msg);
 
-		void receive(const addr &from, const sys::find_actor_req &req);
+			void receive(const addr &from, const regist_actor_req &req);
 
-		void receive(const addr &from, const sys::get_engine_list_req &req);
+			void receive(const addr &from, const regist_engine_req &req);
 
-		//
-		void regist_actor(const actor_info & info);
+			void receive(const addr &from, const find_actor_req &req);
 
-		void unregist_actor(const addr& _addr);
+			void receive(const addr &from, const get_engine_list_req &req);
 
-		void regist_engine(const engine_info &engine);
+			//
+			void regist_actor(const actor_info & info);
 
-		bool find_actor(const std::string & name, actor_info &info);
+			void unregist_actor(const addr& _addr);
 
-		bool find_engine(uint64_t id, engine_info &engine);
+			void regist_engine(const engine_info &engine);
 
-		bool find_engine(const std::string &name, engine_info &engine);
+			bool find_actor(const std::string & name, actor_info &info);
 
-		void get_engine_list(sys::get_engine_list_resp &resp);
+			bool find_engine(uint64_t id, engine_info &engine);
 
-		uint64_t unique_id();
-		
-		virtual void repicate_callback(const std::string & data, uint64_t index) override;
+			bool find_engine(const std::string &name, engine_info &engine);
 
-		virtual std::string get_snapshot_file(uint64_t index) override;
+			void get_engine_list(get_engine_list_resp &resp);
 
-		virtual void make_snapshot_callback(raft::snapshot_info info) override;
+			uint64_t unique_id();
 
-		virtual void new_snapshot_callback(raft::snapshot_info info, std::string &filepath) override;
+			virtual void repicate_callback(const std::string & data, uint64_t index) override;
 
-		virtual void receive_snashot_file_failed(std::string &filepath) override;
+			virtual std::string get_snapshot_file(uint64_t index) override;
 
-		virtual void receive_snashot_file_success(std::string &filepath) override;
+			virtual void make_snapshot_callback(raft::snapshot_info info) override;
 
-		virtual bool support_snapshot() override;
+			virtual void new_snapshot_callback(raft::snapshot_info info, std::string &filepath) override;
 
-	private:
+			virtual void receive_snashot_file_failed(std::string &filepath) override;
 
-		uint64_t next_engine_id_ = 0;
-		std::map<std::string, engine_info> engine_map_;
-		std::map<std::string, actor_info> actor_names_;
-		nameserver_config config_;
+			virtual void receive_snashot_file_success(std::string &filepath) override;
 
-		raft::snapshot_info current_build_snapshot_;
+			virtual bool support_snapshot() override;
 
-		std::map<uint64_t, std::string> snapshots_;
-		std::string snapshot_path_;
-	};
+		private:
+
+			uint64_t next_engine_id_ = 0;
+			std::map<std::string, engine_info> engine_map_;
+			std::map<std::string, actor_info> actor_names_;
+			nameserver_config config_;
+
+			raft::snapshot_info current_build_snapshot_;
+
+			std::map<uint64_t, std::string> snapshots_;
+			std::string snapshot_path_;
+		};
+	}
 }

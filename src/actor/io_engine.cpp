@@ -325,10 +325,11 @@ namespace net
 	{
 		auto engine_id = _msg.net_connect_->engine_id();
 		auto remote_addr = _msg.net_connect_->remote_addr();
-		addr to = _msg.net_connect_->from();
+		addr from = _msg.net_connect_->from();
+		addr to = from;
 
 		sys::net_connect_notify notify;
-		notify.set_connected(true);
+		notify.set_is_connecting(false);
 		notify.mutable_net_connect()->CopyFrom(*_msg.net_connect_);
 
 		std::shared_ptr<socket_info::socket> socket;
@@ -344,7 +345,7 @@ namespace net
 		 {
 			 auto sock = connect(remote_addr);
 			 if (!sock)
-				 return send_msg_(make_message(to, to, notify));
+				 return send_msg_(make_message(from, to, notify));
 
 			 socket.reset(new socket_info::socket (sock), 
 				 [](socket_info::socket * socket){
@@ -354,8 +355,8 @@ namespace net
 		if (socket)
 		{
 			sockets_[engine_id] = {socket, remote_addr};
-			notify.set_connected(true);
-			send_msg_(make_message(to, to, notify));
+			notify.set_is_connecting(true);
+			send_msg_(make_message(from, to, notify));
 		}
 	}
 

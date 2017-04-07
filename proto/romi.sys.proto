@@ -31,7 +31,7 @@ message net_connect
 message net_connect_notify
 {
 	net_connect net_connect = 1;
-	bool connected = 2;
+	bool is_connecting = 2;
 }
 
 message net_not_actor
@@ -77,64 +77,3 @@ message actor_close
 { 
 	addr addr = 1;
 };
-
-//nameserver
-enum result
-{
-	e_true = 0;
-	e_no_leader = 1;
-	e_false = 2;
-}
-message regist_engine_req
-{
-	uint64 req_id = 1;
-	engine_info engine_info = 2;
-};
-
-message regist_engine_resp
-{
-	uint64 req_id = 1;
-	uint64 engine_id = 2;
-	result result = 3;
-}
-
-message get_engine_list_req
-{
-	uint64 req_id = 1;
-}
-
-message get_engine_list_resp
-{
-	uint64 req_id = 1;	
-	result result = 2;
-	repeated engine_info engine_info = 3;
-}
-
-message regist_actor_req
-{
-	uint64 req_id = 1;
-	result result =2;
-	actor_info actor_info = 3;
-}
-
-message regist_actor_resp
-{
-	uint64 req_id = 1;
-	result result = 2;
-}
-
-message find_actor_req
-{
-	uint64 req_id = 1;
-	string name = 2;
-	result result = 3;
-}
-
-message find_actor_resp
-{
-	uint64 req_id = 1;
-	find_actor_req req = 2;
-	result result = 3;
-	actor_info actor_info = 4;
-}
-

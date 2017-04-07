@@ -9,8 +9,8 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\..\..\build\msvc\romi\x64\Debug;$(SolutionDir)..\..\..\deps\zeromq4-x\bin\x64;$(SolutionDir)..\..\..\deps\protobuf\cmake\build\solution\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libzmq_d.lib;ws2_32.lib;libprotobufd.lib;libprotobuf-lited.lib;romi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\..\..\build\msvc\romi\x64\Debug;$(SolutionDir)..\..\..\deps\zeromq4-x\bin\x64;$(SolutionDir)..\..\..\deps\protobuf\cmake\build\solution\Debug;$(SolutionDir)..\..\..\deps\rocksdb\cmake\build\solution\Debug\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Rpcrt4.lib;libzmq_d.lib;ws2_32.lib;romi.lib;libprotobufd.lib;rocksdblib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup />

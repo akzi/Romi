@@ -49,7 +49,8 @@ namespace romi
 			void get_engine_list(get_engine_list_resp &resp);
 
 			uint64_t unique_id();
-
+			
+			// raft::node
 			virtual void repicate_callback(const std::string & data, uint64_t index) override;
 
 			virtual std::string get_snapshot_file(uint64_t index) override;

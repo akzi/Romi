@@ -100,7 +100,8 @@ namespace raft
 
 		void replicate_log_entry(peer &_peer);
 
-		void add_log_entries(uint64_t next_index, uint32_t max_bytes, 
+		void add_log_entries(uint64_t next_index, 
+			uint32_t max_bytes, 
 			raft::replicate_log_entries_request &req);
 
 		log_entry get_log_entry(uint64_t index);

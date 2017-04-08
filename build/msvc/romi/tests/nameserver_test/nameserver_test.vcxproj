@@ -116,6 +116,11 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\..\..\tests\nameserver_test.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\romi.vcxproj">
+      <Project>{3a71e816-fff9-4654-86c6-cbebe0ff2834}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

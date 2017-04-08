@@ -7,7 +7,6 @@ namespace romi
 	constexpr uint64_t g_nameserver_actor_id = 1;
 	constexpr uint64_t nameserver_engine_id = 1;
 	engine::engine()
-		:threadpool_()
 	{
 	}
 	engine::~engine()
@@ -123,6 +122,19 @@ namespace romi
 		io_engine_.send_cmd(std::move(cmd));
 	}
 
+	void engine::add_job(std::function<void()> &&handle)
+	{
+		assert(is_start_);
+		threadpool_->add_job(std::move(handle));
+	}
+
+
+	void engine::add_job(const std::function<void()> &handle)
+	{
+		assert(is_start_);
+		threadpool_->add_job(handle);
+	}
+
 	void engine::send(message_base::ptr &&msg)
 	{
 		if (msg->to_.engine_id() == engine_id_)
@@ -150,6 +162,7 @@ namespace romi
 
 	void engine::set_config(config cfg)
 	{
+		assert(!is_start_);
 		config_ = std::move(cfg);
 		engine_id_ = config_.engine_id_;
 		engine_addr_.set_actor_id(engine_actor_id_);
@@ -176,10 +189,11 @@ namespace romi
 			return true;
 		});
 		is_start_ = true;
-		if (config_.nameserver_addr_.empty() ||
-			config_.engine_name_.empty() ||
-			config_.is_nameserver_)
+		if (!config_.regist_engine_ || config_.is_nameserver_)
 			return;
+
+		assert(config_.nameserver_addr_.size());
+
 		init_nameserver_cluster();
 		regist_engine();
 	}
@@ -188,9 +202,10 @@ namespace romi
 	{
 		assert(is_start_);
 		is_start_ = false;
-		timer_.cancel_timer(timer_id_);
+		io_engine_.stop();
 		timer_.stop();
 		dispatcher_pool_.stop();
+		threadpool_->stop();
 	}
 
 	void engine::init_actor(actor::ptr &_actor)

@@ -16,17 +16,6 @@ namespace romi
 		std::enable_if_t<std::is_base_of<actor, Actor>::value, addr>
 			spawn(Args &&...args);
 
-		template<class F, class... Args>
-		std::enable_if_t<std::is_void<typename function_traits<F>::return_type>::value, 
-			std::pair<uint64_t,std::future<void>>>
-			add_job(F&& f, Args&&... args);
-
-		template<class F, class... Args>
-		std::enable_if_t<!std::is_void<typename function_traits<F>::return_type>::value, 
-			std::pair<uint64_t, std::future<typename function_traits<F>::return_type>>>
-			add_job(F&& f, Args&&... args);
-
-
 		template<typename Handle>
 		void receive(Handle handle);
 

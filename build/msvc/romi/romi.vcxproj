@@ -137,6 +137,7 @@
     <ClCompile Include="..\..\..\src\actor\engine.cpp" />
     <ClCompile Include="..\..\..\src\actor\io_engine.cpp" />
     <ClCompile Include="..\..\..\src\actor\romi.cpp" />
+    <ClCompile Include="..\..\..\src\actor\threadpool.cpp" />
     <ClCompile Include="..\..\..\src\actor\timer.cpp" />
     <ClCompile Include="..\..\..\src\proto_gen\romi.nameserver.pb.cc" />
     <ClCompile Include="..\..\..\src\proto_gen\romi.pb.cc" />
@@ -161,7 +162,7 @@
     <ClInclude Include="..\..\..\src\actor\message.hpp" />
     <ClInclude Include="..\..\..\src\actor\message_builder.hpp" />
     <ClInclude Include="..\..\..\src\actor\romi.hpp" />
-    <ClInclude Include="..\..\..\src\actor\threadpool.hpp" />
+    <ClInclude Include="..\..\..\src\actor\threadpool.h" />
     <ClInclude Include="..\..\..\src\actor\timer.hpp" />
     <ClInclude Include="..\..\..\src\proto_gen\romi.nameserver.pb.h" />
     <ClInclude Include="..\..\..\src\proto_gen\romi.pb.h" />

@@ -66,10 +66,10 @@ namespace romi
 			virtual bool support_snapshot() override;
 
 		private:
-
 			uint64_t next_engine_id_ = 0;
 			std::map<std::string, engine_info> engine_map_;
 			std::map<std::string, actor_info> actor_names_;
+
 			nameserver_config config_;
 
 			raft::snapshot_info current_build_snapshot_;

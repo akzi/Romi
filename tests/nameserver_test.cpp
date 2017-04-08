@@ -19,17 +19,11 @@ private:
 		});
 		send(get_nameserver_addr(), romi::nameserver::get_engine_list_req{});
 
-		std::cout << "dispather count:" << get_dispatcher_size() << std::endl;
+		std::cout << "dispatcher count:" << get_dispatcher_size() << std::endl;
 		std::cout << "actor count:" << get_actor_size() << std::endl;
 
 		increase_dispather(10);
-		std::cout << "dispather count:" << get_dispatcher_size() << std::endl;
-
-		auto func = [](int a) {
-			return a;
-		};
-		auto f = add_job(to_function(func), 1);
-		f.second.get();
+		std::cout << "dispatcher count:" << get_dispatcher_size() << std::endl;
 	}
 };
 
@@ -37,16 +31,26 @@ int main()
 {
 	romi::engine engine;
 
+
 	romi::config cfg;
 	cfg.engine_name_ = "nameserver_test";
 
 	engine.set_config(cfg);
 
 	engine.start();
+	for (int i = 0; i < 1000; i++)
+	{
+		engine.add_job([i] {
+			std::cout << i << std::endl;
+		});
+	}
+	
 
 	engine.spawn<nameserver_test>();
 
 	getchar();
 
+	engine.stop();
 
+	return 0;
 }

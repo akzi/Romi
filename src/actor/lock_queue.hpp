@@ -1,7 +1,4 @@
 #pragma once
-#pragma once
-#include <queue>
-#include <mutex>
 namespace romi
 {
 	template<typename T>
@@ -16,6 +13,13 @@ namespace romi
 		{
 			std::lock_guard<std::mutex> locker(mtex_);
 			queue_.emplace(std::forward<T>(item));
+			return queue_.size();
+		}
+
+		std::size_t push(const T &item)
+		{
+			std::lock_guard<std::mutex> locker(mtex_);
+			queue_.push(item);
 			return queue_.size();
 		}
 

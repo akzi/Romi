@@ -15,13 +15,13 @@ namespace romi
 		inline std::enable_if_t<std::is_base_of<actor, Actor>::value, addr> 
 			spawn(Args &&...args);
 
+		void add_job(std::function<void()> &&handle);
+
+		void add_job(const std::function<void()> &handle);
+
 		template<typename T>
 		std::enable_if_t<std::is_base_of<::google::protobuf::Message, T>::value>
 			send(const addr &from, const addr &to, const T &msg);
-
-		template<class F, class... Args>
-		auto add_job(F&& f, Args&&... args)
-			-> std::future<typename std::result_of<F(Args...)>::type>;
 
 		void set_config(config cfg);
 
@@ -95,6 +95,10 @@ namespace romi
 
 		struct actors
 		{
+			~actors()
+			{
+
+			}
 			std::mutex lock_;
 			std::map<addr, actor::ptr, addr_less> actors_;
 		} actors_;
@@ -107,7 +111,6 @@ namespace romi
 		const uint64_t engine_actor_id_ = 0;
 		dispatcher_pool dispatcher_pool_;
 		timer timer_;
-		std::unique_ptr<threadpool> threadpool_;
 		//watcher
 		struct engine_watcher
 		{
@@ -133,5 +136,7 @@ namespace romi
 		addr nameserver_leader_;
 		addr default_nameserver_;
 		addr engine_addr_;
+
+		std::unique_ptr<threadpool> threadpool_;
 	};
 }

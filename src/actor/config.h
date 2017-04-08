@@ -6,7 +6,10 @@ namespace romi
 		config()
 		{
 		}
+
 		bool is_nameserver_ = false;
+
+		bool regist_engine_ = false;
 		//0 for get engine from nameserver
 		uint64_t engine_id_ = 0;
 		std::string engine_name_;

@@ -56,6 +56,11 @@ namespace net
 
 	}
 
+	cmd_queue::~cmd_queue()
+	{
+		close();
+	}
+
 	void cmd_queue::init(void *zmq_ctx_, const char *addr_)
 	{
 		socket_ = zmq_socket(zmq_ctx_, ZMQ_PAIR);
@@ -74,6 +79,14 @@ namespace net
 	bool cmd_queue::pop(command &_msg)
 	{
 		return msg_queue_.pop(_msg);
+	}
+
+
+	void cmd_queue::close()
+	{
+		if (socket_)
+			zmq_close(socket_);
+		socket_ = nullptr;
 	}
 
 	void cmd_queue::notify()
@@ -152,8 +165,11 @@ namespace net
 	void io_engine::stop()
 	{
 		is_stop_ = true;
+		msg_queue_.close();
+		sockets_.clear();
 		receiver_.join();
 		sender_.join();
+		monitor_.join();
 	}
 	void io_engine::start_receiver(std::function<void()> init_done, const char *addr)
 	{
@@ -199,7 +215,7 @@ namespace net
 			}
 		}
 		zmq_msg_close(&msg);
-		zmq_close(zmq_ctx_);
+		zmq_close(socket);
 	}
 
 
@@ -229,6 +245,8 @@ namespace net
 			{
 				if (errno == EAGAIN)
 					continue;
+				zmq_msg_close(&msg);
+				zmq_close(socket);
 				throw std::runtime_error(zmq_strerror(errno));
 			}
 			process_msg();
@@ -249,10 +267,14 @@ namespace net
 		rc = zmq_msg_recv(&msg1, socket, 0);
 		if (rc == -1 && zmq_errno() == ETERM)
 			return false;
+			
 
 		rc = zmq_msg_recv(&msg2, socket, 0);
 		if (rc == -1 && zmq_errno() == ETERM)
+		{
+			zmq_msg_close(&msg1);
 			return false;
+		}
 
 		const char* data = (char*)zmq_msg_data(&msg1);
 		memcpy(&event.event, data, sizeof(event.event));
@@ -261,8 +283,11 @@ namespace net
 		addr = std::string((char*)zmq_msg_data(&msg2), zmq_msg_size(&msg2));
 
 		if (event.event == ZMQ_EVENT_MONITOR_STOPPED)
+		{
+			zmq_msg_close(&msg1);
+			zmq_msg_close(&msg2);
 			return false;
-
+		}
 		return true;
 	}
 
@@ -306,6 +331,7 @@ namespace net
 				+ " "+ std::to_string(event.value);
 			std::cout << info << std::endl;
 		}
+		zmq_close(socket);
 	}
 
 	io_engine::socket io_engine::connect(std::string remote_addr)

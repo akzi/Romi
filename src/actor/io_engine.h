@@ -38,9 +38,11 @@ namespace net
 	{
 	public:
 		cmd_queue();
+		~cmd_queue();
 		void init(void *zmq_ctx_, const char *addr_);
 		void push_back(command &&_msg);
 		bool pop(command &_msg);
+		void close();
 	private:
 		void notify();
 

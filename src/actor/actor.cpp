@@ -13,6 +13,18 @@ namespace romi
 	
 	}
 
+
+	void actor::add_job(const std::function<void()> &job)
+	{
+		engine_->add_job(job);
+	}
+
+
+	void actor::add_job(std::function<void()> &&job)
+	{
+		engine_->add_job(std::move(job));
+	}
+
 	void actor::send(message_base::ptr &&msg)
 	{
 		send_msg_(std::move(msg));
@@ -121,6 +133,12 @@ namespace romi
 		if (count_ <= 0)
 			return;
 		increase_dispather_(count_);
+	}
+
+
+	std::function<void(message_base::ptr &&)> actor::get_send_msg_handle()
+	{
+		return send_msg_;
 	}
 
 	void actor::init()

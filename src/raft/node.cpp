@@ -67,7 +67,7 @@ namespace romi
 			assert(false);
 		}
 
-		void node::new_snapshot_callback(raft::snapshot_info info, std::string &filepath)
+		void node::receive_snapshot_callback(raft::snapshot_info info, std::string &filepath)
 		{
 			assert(false);
 		}
@@ -586,7 +586,7 @@ namespace romi
 
 			if (snapshot_filepath_.empty())
 			{
-				new_snapshot_callback(req.snapshot_info(), snapshot_filepath_);
+				receive_snapshot_callback(req.snapshot_info(), snapshot_filepath_);
 				snapshot_.open(snapshot_filepath_);
 				assert(snapshot_.good());
 			}

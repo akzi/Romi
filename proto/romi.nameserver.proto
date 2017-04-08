@@ -33,6 +33,20 @@ message get_cluster_list_resp
 	get_cluster_list_req req = 1;
 	repeated nameserver_info nameserver_info = 2;
 }
+
+//
+message get_engine_id_req
+{
+	uint64 req_id = 1;	
+}
+message get_engine_id_resp
+{
+	uint64 req_id = 1;	
+	result result = 2;
+	uint64 engine_id = 3;
+}
+
+
 message regist_engine_req
 {
 	uint64 req_id = 1;
@@ -84,5 +98,12 @@ message find_actor_resp
 	find_actor_req req = 2;
 	result result = 3;
 	actor_info actor_info = 4;
+}
+
+//snapshot for nameserver::node 
+message write_snapshot_done
+{
+	bool ok=1;
+	string snapshot_path = 2;
 }
 

@@ -16,6 +16,11 @@ namespace romi
 		std::enable_if_t<std::is_base_of<actor, Actor>::value, addr>
 			spawn(Args &&...args);
 
+		
+		void add_job(std::function<void()> &&job);
+
+		void add_job(const std::function<void()> &job);
+
 		template<typename Handle>
 		void receive(Handle handle);
 
@@ -48,6 +53,9 @@ namespace romi
 
 		void increase_dispather(int count_);
 
+		std::function<void(message_base::ptr &&)> 
+			get_send_msg_handle();
+
 	private:
 		virtual void init();
 
@@ -77,7 +85,7 @@ namespace romi
 
 		std::map<std::string, msg_process_handle> msg_handles_;
 
-		std::function<void(message_base::ptr)> send_msg_;
+		std::function<void(message_base::ptr &&)> send_msg_;
 		//timer
 		uint64_t timer_id_= 0;
 		std::function<void(uint64_t)> cancel_timer_;

@@ -46,7 +46,7 @@ namespace raft
 
 		virtual void make_snapshot_callback(raft::snapshot_info info);
 
-		virtual void new_snapshot_callback(raft::snapshot_info info, std::string &filepath);
+		virtual void receive_snapshot_callback(raft::snapshot_info info, std::string &filepath);
 
 		virtual void receive_snashot_file_failed(std::string &filepath);
 

@@ -34,6 +34,9 @@ namespace romi
 			void receive(const addr &from, const get_engine_list_req &req);
 
 			//
+			void receive(const addr &from, const write_snapshot_done &req);
+
+
 			void regist_actor(const actor_info & info);
 
 			void unregist_actor(const addr& _addr);
@@ -57,7 +60,7 @@ namespace romi
 
 			virtual void make_snapshot_callback(raft::snapshot_info info) override;
 
-			virtual void new_snapshot_callback(raft::snapshot_info info, std::string &filepath) override;
+			virtual void receive_snapshot_callback(raft::snapshot_info info, std::string &filepath) override;
 
 			virtual void receive_snashot_file_failed(std::string &filepath) override;
 
@@ -66,16 +69,23 @@ namespace romi
 			virtual bool support_snapshot() override;
 
 		private:
+			std::string make_snapshot_name(raft::snapshot_info info);
+
 			uint64_t next_engine_id_ = 0;
-			std::map<std::string, engine_info> engine_map_;
-			std::map<std::string, actor_info> actor_names_;
+
+			std::map<std::string, engine_info> engines_;
+			std::map<std::string, actor_info> actors_;
 
 			nameserver_config config_;
 
 			raft::snapshot_info current_build_snapshot_;
 
-			std::map<uint64_t, std::string> snapshots_;
+			std::string snapshot_file_;
+
+
 			std::string snapshot_path_;
+			std::string wal_path_;
+			std::ofstream wal_;
 		};
 	}
 }

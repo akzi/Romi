@@ -26,6 +26,8 @@ namespace romi
 			REGIST_RECEIVE(regist_engine_req);
 			REGIST_RECEIVE(find_actor_req);
 			REGIST_RECEIVE(regist_actor_req);
+			REGIST_RECEIVE(write_snapshot_done);
+
 		}
 
 		void node::init()
@@ -135,10 +137,18 @@ namespace romi
 			unregist_actor(msg.addr());
 		}
 
+		void node::receive(const addr &from, const write_snapshot_done &req)
+		{
+			if (req.ok())
+			{
+
+			}
+		}
+
 
 		void node::get_engine_list(get_engine_list_resp &resp)
 		{
-			for (auto &itr : engine_map_)
+			for (auto &itr : engines_)
 			{
 				resp.add_engine_info()->CopyFrom(itr.second);
 			}
@@ -146,17 +156,17 @@ namespace romi
 
 		void node::regist_actor(const actor_info & info)
 		{
-			actor_names_[info.name()] = info;
+			actors_[info.name()] = info;
 		}
 
 
 		void node::unregist_actor(const addr& _addr)
 		{
-			for (auto itr = actor_names_.begin(); itr != actor_names_.end(); ++itr)
+			for (auto itr = actors_.begin(); itr != actors_.end(); ++itr)
 			{
 				if (itr->second.addr() == _addr)
 				{
-					actor_names_.erase(itr);
+					actors_.erase(itr);
 					return;
 				}
 			}
@@ -164,8 +174,8 @@ namespace romi
 
 		bool node::find_actor(const std::string & name, actor_info &info)
 		{
-			auto itr = actor_names_.find(name);
-			if (itr != actor_names_.end())
+			auto itr = actors_.find(name);
+			if (itr != actors_.end())
 			{
 				info = itr->second;
 				return true;
@@ -175,13 +185,13 @@ namespace romi
 
 		void node::regist_engine(const engine_info &engine)
 		{
-			engine_map_[engine.engine_name()] = engine;
+			engines_[engine.engine_name()] = engine;
 		}
 
 		bool node::find_engine(const std::string &name, engine_info &engine)
 		{
-			auto itr = engine_map_.find(name);
-			if (itr != engine_map_.end())
+			auto itr = engines_.find(name);
+			if (itr != engines_.end())
 			{
 				engine = itr->second;
 				return true;
@@ -191,7 +201,7 @@ namespace romi
 
 		bool node::find_engine(uint64_t id, engine_info &engine)
 		{
-			for (auto &itr : engine_map_)
+			for (auto &itr : engines_)
 			{
 				if (id == itr.second.engine_id())
 					engine = itr.second;
@@ -217,12 +227,9 @@ namespace romi
 			return{};
 		}
 
-		void node::new_snapshot_callback(raft::snapshot_info info, std::string &filepath)
+		void node::receive_snapshot_callback(raft::snapshot_info info, std::string &filepath)
 		{
-			if (current_build_snapshot_ == info)
-				return;
-			current_build_snapshot_ = info;
-
+			filepath = make_snapshot_name(info);
 		}
 
 		void node::receive_snashot_file_failed(std::string &filepath)
@@ -242,8 +249,26 @@ namespace romi
 
 		void node::make_snapshot_callback(raft::snapshot_info info)
 		{
+			std::map<std::string, engine_info> engines = engines_;
+			std::map<std::string, actor_info> actors = actors_;
+			uint64_t next_engine_id = next_engine_id_;
+			std::string filename = make_snapshot_name(info);
 
+			add_job([=] {
+
+			});
 		}
+
+		std::string node::make_snapshot_name(raft::snapshot_info info)
+		{
+			std::string filepath = snapshot_path_;
+			if (filepath.back() != '\\' && filepath.back() != '/')
+				filepath.push_back('/');
+
+			filepath += std::to_string(info.last_included_term());
+			filepath += ".snapshot__temp";
+		}
+
 	}
 	
 

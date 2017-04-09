@@ -37,7 +37,7 @@ namespace raft
 
 		bool is_leader();
 
-		uint64_t replicate(const std::string &msg, std::function<void (bool)> commit_handle);
+		uint64_t replicate(std::string &&msg, std::function<void (bool)> commit_handle);
 
 	protected:
 		virtual void repicate_callback(const std::string & data, uint64_t index);

@@ -25,6 +25,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\..\services\nameserver\src\nameserver.h" />
     <ClInclude Include="..\..\..\..\services\nameserver\src\nameserver_config.hpp" />
+    <ClInclude Include="..\..\..\..\services\nameserver\src\utils.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{95877DBB-65EB-4A13-9B7E-1EDA41BBAF02}</ProjectGuid>

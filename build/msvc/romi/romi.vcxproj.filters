@@ -24,6 +24,9 @@
     <None Include="..\..\..\proto\romi.nameserver.proto">
       <Filter>proto</Filter>
     </None>
+    <None Include="..\..\..\proto\romi.raft.proto">
+      <Filter>proto</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\actor\dispatcher_pool.cpp">

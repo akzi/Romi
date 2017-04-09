@@ -18,6 +18,7 @@
 #include <functional>
 #include <condition_variable>
 #include <time.h>
+#include <fstream>
 
 
 #include "romi.pb.h"

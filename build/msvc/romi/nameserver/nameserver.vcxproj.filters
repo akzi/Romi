@@ -20,5 +20,8 @@
     <ClInclude Include="..\..\..\..\services\nameserver\src\nameserver_config.hpp">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\services\nameserver\src\utils.hpp">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -18,8 +18,8 @@ namespace romi
 		private:
 
 			virtual void init() override;
-
-			void regist_message();
+			
+		
 
 			void receive(const addr &from, const sys::net_connect_notify &notify);
 
@@ -41,13 +41,13 @@ namespace romi
 
 			void unregist_actor(const addr& _addr);
 
-			void regist_engine(const engine_info &engine);
+			void regist_engine(const engine_info &info);
 
 			bool find_actor(const std::string & name, actor_info &info);
 
 			bool find_engine(uint64_t id, engine_info &engine);
 
-			bool find_engine(const std::string &name, engine_info &engine);
+			bool find_engine(const std::string &name, engine_info &info);
 
 			void get_engine_list(get_engine_list_resp &resp);
 
@@ -68,8 +68,23 @@ namespace romi
 
 			virtual bool support_snapshot() override;
 
-		private:
+			//
+			void reload_snapshot();
+
+			void reload_wal();
+
+			void regist_message();
+
+			uint64_t gen_version();
+
+			void load_snapshot(std::ifstream &file);
+
 			std::string make_snapshot_name(raft::snapshot_info info);
+
+			void write_wal(uint8_t type, const std::string &data);
+			
+			void load_wal(std::ifstream &file);
+		private:
 
 			uint64_t next_engine_id_ = 0;
 
@@ -78,14 +93,18 @@ namespace romi
 
 			nameserver_config config_;
 
-			raft::snapshot_info current_build_snapshot_;
-
+			bool building_snapshot_ = false;
+			
 			std::string snapshot_file_;
+			raft::snapshot_info snapshot_info_;
 
 
 			std::string snapshot_path_;
+
 			std::string wal_path_;
 			std::ofstream wal_;
+
+			uint64_t version_ = 0;
 		};
 	}
 }

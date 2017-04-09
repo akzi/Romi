@@ -32,6 +32,15 @@ namespace romi
 		}
 		return buffer;
 	}
+	inline  std::size_t get_sizeof(addr)
+	{
+		return sizeof(uint64_t) + sizeof(uint64_t);
+	}
+
+	inline std::size_t get_sizeof(const std::string &str)
+	{
+		return sizeof(uint32_t) + str.size();
+	}
 
 	inline void encode_uint32(uint8_t *&buffer_, uint32_t value)
 	{
@@ -40,6 +49,14 @@ namespace romi
 		buffer_[2] = (unsigned char)(((value) >> 8) & 0xff);
 		buffer_[3] = (unsigned char)(value & 0xff);
 		buffer_ += sizeof(value);
+	}
+
+	inline void encode_uint32(std::ofstream &file, uint32_t value)
+	{
+		uint8_t buffer[sizeof(uint32_t)];
+		uint8_t *ptr = buffer;
+		encode_uint32(ptr, value);
+		file.write((char*)buffer, sizeof(uint32_t));
 	}
 
 	inline uint32_t decode_uint32(uint8_t *&buffer_)
@@ -67,6 +84,36 @@ namespace romi
 		buffer_ += sizeof(uint64_t);
 	}
 
+	inline void encode_uint64(std::ofstream &file, uint64_t value)
+	{
+		uint8_t buffer[sizeof(uint64_t)];
+		uint8_t *ptr = buffer;
+		encode_uint64(ptr, value);
+		file.write((char*)buffer, sizeof(uint64_t));
+	}
+	inline void encode_uint8(std::string &buffer, uint8_t value)
+	{
+		buffer.push_back((char)value);
+	}
+	inline void encode_uint64(std::string &buffer, uint64_t value)
+	{
+		uint8_t uint64_buffer[sizeof(uint64_t)];
+		uint8_t *ptr = uint64_buffer;
+		encode_uint64(ptr, value);
+
+		buffer.append((char*)uint64_buffer, sizeof(value));
+	}
+
+	inline uint8_t decode_uint8(std::ifstream &file)
+	{
+		uint8_t value = 0;
+		file.read((char*)value, sizeof(value));
+		return value;
+	}
+	
+
+	
+
 	inline uint64_t decode_uint64(uint8_t *&buffer_)
 	{
 		uint64_t value =
@@ -81,12 +128,48 @@ namespace romi
 		buffer_ += sizeof(uint64_t);
 		return value;
 	}
+	inline uint64_t decode_uint64(std::ifstream &file)
+	{
+		uint8_t uint64[sizeof(uint64_t)];
+		uint8_t *ptr = uint64;
+		file.read((char*)uint64, sizeof(uint64_t));
+		return decode_uint64(ptr);
+	}
 
-	inline void encode_string(uint8_t *&buffer_, std::string &str)
+	inline void encode_string(uint8_t *&buffer_, const std::string &str)
 	{
 		encode_uint32(buffer_, (uint32_t)str.size());
 		memcpy(buffer_, str.data(), str.size());
 		buffer_ += str.size();
+	}
+
+	inline void encode_string(std::ofstream &file, const std::string &str)
+	{
+		std::string buffer;
+		buffer.resize(get_sizeof(str));
+		uint8_t *ptr = (uint8_t *)buffer.data();
+		encode_string(ptr, str);
+
+		file.write(buffer.data(), buffer.size());
+	}
+
+	inline void encode_string(std::string &buffer, const std::string &str)
+	{
+		uint8_t len[sizeof(uint32_t)];
+		uint8_t *ptr = len;
+		encode_uint32(ptr, (uint32_t)str.size());
+		buffer.append((char*)len, sizeof(len));
+		buffer.append(str);
+	}
+
+	inline std::string decode_string(std::ifstream &file)
+	{
+		auto len = decode_uint64(file);
+		std::string buffer;
+		buffer.resize(len);
+
+		file.read((char *)buffer.data(), buffer.size());
+		return buffer;
 	}
 
 	inline std::string decode_string(uint8_t *&buffer_)
@@ -99,15 +182,8 @@ namespace romi
 		return value;
 	}
 
-	inline  std::size_t get_sizeof(addr)
-	{
-		return sizeof(uint64_t) + sizeof(uint64_t);
-	}
 
-	inline std::size_t get_sizeof(const std::string &str)
-	{
-		return sizeof(uint32_t) + str.size();
-	}
+
 
 	//
 	inline google::protobuf::Message*
@@ -132,6 +208,17 @@ namespace romi
 		return message;
 	}
 
+	inline std::string pack_message(const google::protobuf::Message &message)
+	{
+		auto req_buffer = message.SerializeAsString();
+		auto req_name = message.GetDescriptor()->full_name();
+		std::string buffer;
+		buffer.reserve(get_sizeof(req_buffer) + get_sizeof(req_name));
+		encode_string(buffer, req_name);
+		encode_string(buffer, req_buffer);
+		return buffer;
+	}
+
 	//addr
 	inline bool operator == (const addr &left, const addr &right)
 	{
@@ -141,7 +228,7 @@ namespace romi
 
 	//message
 	template<typename T>
-	inline void* romi::message<T>::get_impl(const std::type_info& info)const
+	void* romi::message<T>::get_impl(const std::type_info& info)const
 	{
 		if (typeid(T) == info)
 			return value_.get();

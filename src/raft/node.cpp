@@ -82,7 +82,7 @@ namespace romi
 			assert(false);
 		}
 
-		uint64_t node::replicate(const std::string &msg,
+		uint64_t node::replicate(std::string &&msg,
 			std::function<void(bool)> commit_handle)
 		{
 			assert(is_leader());
@@ -90,7 +90,7 @@ namespace romi
 
 			entry.set_index(++last_log_index_);
 			entry.set_term(last_log_term_);
-			entry.set_log_data_(msg);
+			entry.set_log_data(std::move(msg));
 			entry.set_type(e_raft_log);
 
 			write_raft_log(entry);
@@ -439,7 +439,7 @@ namespace romi
 				for (auto &itr : entries)
 				{
 					assert(itr.index() == committed_index_ + 1);
-					repicate_callback(itr.log_data_(), itr.index());
+					repicate_callback(itr.log_data(), itr.index());
 					committed_index_ = itr.index();
 				}
 			}

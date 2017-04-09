@@ -28,7 +28,7 @@ message log_entry
 	uint64 index = 1;
 	uint64 term = 2;
 	type type = 3;
-	string log_data_ = 4;
+	string log_data = 4;
 }
 
 message replicate_log_entries_request

@@ -128,6 +128,7 @@
   <ItemGroup>
     <None Include="..\..\..\proto\romi.nameserver.proto" />
     <None Include="..\..\..\proto\romi.proto" />
+    <None Include="..\..\..\proto\romi.raft.proto" />
     <None Include="..\..\..\proto\romi.sys.proto" />
   </ItemGroup>
   <ItemGroup>

@@ -56,6 +56,16 @@ namespace romi
 			return false;
 		}
 
+
+		raft::snapshot_info node::get_last_snapshot_info()
+		{
+			raft::snapshot_info info;
+			info.set_last_included_term(current_term_);
+			info.set_last_snapshot_index(last_log_index_);
+
+			return info;
+		}
+
 		std::string node::get_snapshot_file(uint64_t index)
 		{
 			assert(false);

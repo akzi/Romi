@@ -53,6 +53,8 @@ namespace raft
 		virtual void receive_snashot_file_success(std::string &filepath);
 
 		virtual bool support_snapshot();
+
+		raft::snapshot_info get_last_snapshot_info();
 	private:
 		struct peer
 		{

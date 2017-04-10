@@ -16,14 +16,13 @@ namespace romi
 			~node();
 
 		private:
-
 			virtual void init() override;
-			
-		
 
 			void receive(const addr &from, const sys::net_connect_notify &notify);
 
 			void receive(const addr &from, const sys::actor_close &msg);
+
+			void receive(const addr &from, const get_engine_id_req &req);
 
 			void receive(const addr &from, const regist_actor_req &req);
 
@@ -33,15 +32,16 @@ namespace romi
 
 			void receive(const addr &from, const get_engine_list_req &req);
 
-			//
+			// msg from write snapshot file threadpool.
 			void receive(const addr &from, const write_snapshot_done &req);
 
-
-			void regist_actor(const actor_info & info);
+			void do_regist_actor(const actor_info & info);
 
 			void unregist_actor(const addr& _addr);
 
-			void regist_engine(const engine_info &info);
+			void do_regist_engine(const engine_info &info);
+
+			void connect_engine(const engine_info &info);
 
 			bool find_actor(const std::string & name, actor_info &info);
 
@@ -51,7 +51,7 @@ namespace romi
 
 			void get_engine_list(get_engine_list_resp &resp);
 
-			uint64_t unique_id();
+			uint64_t gen_engine_id();
 			
 			// raft::node
 			virtual void repicate_callback(const std::string & data, uint64_t index) override;
@@ -79,17 +79,26 @@ namespace romi
 
 			void load_snapshot(std::ifstream &file);
 
-			std::string make_snapshot_name(raft::snapshot_info info);
+			std::string gen_snapshot_filepath(raft::snapshot_info info);
 
 			void write_wal(uint8_t type, const std::string &data);
 			
-			void load_wal(std::ifstream &file);
+			void load_wal_file(std::ifstream &file);
 		private:
+
+			void reset();
+
 
 			uint64_t next_engine_id_ = 0;
 
 			std::map<std::string, engine_info> engines_;
 			std::map<std::string, actor_info> actors_;
+
+			struct watchers 
+			{
+				std::set<addr,addr_less> watchers_;
+			};
+			std::map<std::string, watchers > watchers_list_;
 
 			nameserver_config config_;
 

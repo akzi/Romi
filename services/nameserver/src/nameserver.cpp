@@ -12,11 +12,19 @@ namespace romi
 		const static std::string g_snapshot__temp_ext = ".snapshot__temp";
 		const static std::string g_snapshot_ext = ".snapshot";
 
-		enum wal_type:uint8_t
+		enum wal_type :uint8_t
 		{
 			e_regist_engine = 1,
 			e_unregist_engine,
+			e_regist_actor,
+			e_unregist_actor,
+
+			e_join_group,
+			e_leave_group,
+
+			e_gen_engine_id,
 		};
+
 		node::node(nameserver_config cfg)
 			:config_(cfg)
 		{
@@ -35,8 +43,9 @@ namespace romi
 
 			REGIST_RECEIVE(get_engine_list_req);
 			REGIST_RECEIVE(regist_engine_req);
-			REGIST_RECEIVE(find_actor_req);
+			REGIST_RECEIVE(get_engine_id_req);
 			REGIST_RECEIVE(regist_actor_req);
+			REGIST_RECEIVE(find_actor_req);
 			REGIST_RECEIVE(write_snapshot_done);
 
 		}
@@ -73,12 +82,12 @@ namespace romi
 
 			if (snapshots.size())
 			{
-				auto last_snapshot = snapshots.rbegin()->second;
+				snapshot_file_ = snapshots.rbegin()->second;
 				std::ifstream file;
-				file.open(last_snapshot);
+				file.open(snapshot_file_);
 				if (!file.good())
 				{
-					throw std::runtime_error("open file error: " + last_snapshot);
+					throw std::runtime_error("open file error: " + snapshot_file_);
 				}
 				auto str = decode_string(file);
 				if (str != g_nameserver_snapshot)
@@ -90,7 +99,7 @@ namespace romi
 
 				for (auto &itr: snapshots)
 				{
-					if (itr.second != last_snapshot)
+					if (itr.second != snapshot_file_)
 					{
 						to_delete.push_back(itr.second);
 					}
@@ -128,7 +137,7 @@ namespace romi
 				{
 					throw std::runtime_error("is not wal file");
 				}
-				load_wal(file);
+				load_wal_file(file);
 				file.close();
 
 				for (auto &itr : wals)
@@ -201,7 +210,30 @@ namespace romi
 					return send(from, resp);
 				}
 				resp.set_result(e_true);
-				regist_engine(info);
+
+				do_regist_engine(info);
+				send(from, resp);
+			});
+		}
+
+		void node::receive(const addr &from, const get_engine_id_req &req)
+		{
+			get_engine_id_resp resp;
+			if (!is_leader())
+			{
+				resp.set_result(e_no_leader);
+				return send(from, resp);
+			}
+
+			replicate(pack_message(req), [=](bool status) mutable
+			{
+				if (!status)
+				{
+					resp.set_result(e_no_leader);
+					return send(from, resp);
+				}
+				resp.set_engine_id(gen_engine_id());
+				resp.set_result(e_true);
 				send(from, resp);
 			});
 		}
@@ -215,14 +247,21 @@ namespace romi
 				return send(from, resp);
 			}
 
-			auto info = req.actor_info();
-			if (!find_actor(info.name(), info))
+			replicate(pack_message(req), [=](bool status) mutable
 			{
-				regist_actor(info);
+
+				if (!status)
+				{
+					resp.set_result(e_no_leader);
+					return send(from, resp);
+				}
+
+				auto info = req.actor_info();
+				do_regist_actor(info);
 				resp.set_result(e_true);
-			}
-			watch(from);
-			send(from, resp);
+				send(from, resp);
+			});
+			
 		}
 
 		void node::receive(const addr &from, const sys::actor_close &msg)
@@ -247,6 +286,8 @@ namespace romi
 			building_snapshot_ = false;
 		}
 
+		
+
 
 		void node::get_engine_list(get_engine_list_resp &resp)
 		{
@@ -256,9 +297,10 @@ namespace romi
 			}
 		}
 
-		void node::regist_actor(const actor_info & info)
+		void node::do_regist_actor(const actor_info & info)
 		{
 			actors_[info.name()] = info;
+			write_wal(wal_type::e_regist_actor, info.SerializeAsString());
 		}
 
 
@@ -285,14 +327,21 @@ namespace romi
 			return false;
 		}
 
-		void node::regist_engine(const engine_info &info)
+
+		void node::connect_engine(const engine_info &info)
 		{
 			sys::net_connect net_connect;
 			net_connect.set_engine_id(info.engine_id());
 			net_connect.set_remote_addr(info.net_addr());
 			connect(net_connect);
+		}
 
+
+		void node::do_regist_engine(const engine_info &info)
+		{
 			engines_[info.engine_name()] = info;
+			connect_engine(info);
+
 			write_wal(wal_type::e_regist_engine, info.SerializeAsString());
 		}
 
@@ -318,11 +367,12 @@ namespace romi
 			return false;
 		}
 
-		uint64_t node::unique_id()
+		uint64_t node::gen_engine_id()
 		{
-			next_engine_id_++;
-			return std::chrono::high_resolution_clock::now()
-				.time_since_epoch().count() + next_engine_id_;
+			auto value = ++next_engine_id_;
+			std::string buffer;
+			encode_uint64(buffer, value);
+			write_wal(e_gen_engine_id, buffer);
 		}
 
 		void node::repicate_callback(const std::string &data, uint64_t)
@@ -336,7 +386,17 @@ namespace romi
 				regist_engine_req req;
 				req.ParseFromString(decode_string(ptr));
 
-				regist_engine(req.engine_info());
+				do_regist_engine(req.engine_info());
+			}
+			else if(type == get_message_type<get_engine_id_req>())
+			{
+				gen_engine_id();
+			}
+			else if (type == get_message_type<regist_actor_req>())
+			{
+				regist_actor_req req;
+				req.ParseFromString(decode_string(ptr));
+				do_regist_actor(req.actor_info());
 			}
 		}
 
@@ -349,7 +409,7 @@ namespace romi
 
 		void node::receive_snapshot_callback(raft::snapshot_info info, std::string &filepath)
 		{
-			filepath = make_snapshot_name(info);
+			filepath = gen_snapshot_filepath(info);
 		}
 
 		void node::receive_snashot_file_failed(std::string &filepath)
@@ -372,11 +432,16 @@ namespace romi
 				std::cout << "snapshot file header error" << std::endl;
 				return;
 			}
-			remove(snapshot_file_.c_str());
-			snapshot_file_ = filepath;
 
+			reset();
 			load_snapshot(file);
 			file.close();
+
+			auto name = get_filename()(filepath);
+			auto new_name = name + g_snapshot_ext;
+			rename(filepath.c_str(), new_name.c_str());
+			remove(snapshot_file_.c_str());
+			snapshot_file_ = new_name;
 		}
 
 		bool node::support_snapshot()
@@ -389,7 +454,7 @@ namespace romi
 			std::map<std::string, engine_info> engines = engines_;
 			std::map<std::string, actor_info> actors = actors_;
 			uint64_t next_engine_id = next_engine_id_;
-			std::string filename = make_snapshot_name(info);
+			std::string filename = gen_snapshot_filepath(info);
 			auto send_msg_handle = get_send_msg_handle();
 			auto addr_ = get_addr();
 			auto version = version_;
@@ -429,16 +494,13 @@ namespace romi
 
 				snapshot_done.set_ok(true);
 				snapshot_done.set_snapshot_path(filename);
+				//send msg back to actor
 				send_msg_handle(make_message(addr_, addr_, snapshot_done));
 				return;
 			});
 		}
 		void node::load_snapshot(std::ifstream &file)
 		{
-			engines_.clear();
-			actors_.clear();
-			snapshot_info_.Clear();
-
 			version_ = decode_uint64(file);
 			next_engine_id_ = decode_uint64(file);
 			snapshot_info_.ParseFromString(decode_string(file));
@@ -462,7 +524,7 @@ namespace romi
 			}
 		}
 
-		std::string node::make_snapshot_name(raft::snapshot_info info)
+		std::string node::gen_snapshot_filepath(raft::snapshot_info info)
 		{
 			std::string filepath = snapshot_path_;
 			if (filepath.back() != '\\' && filepath.back() != '/')
@@ -488,7 +550,7 @@ namespace romi
 			wal_.write(buffer.data(), buffer.size());
 		}
 
-		void node::load_wal(std::ifstream &file)
+		void node::load_wal_file(std::ifstream &file)
 		{
 			do 
 			{
@@ -506,10 +568,24 @@ namespace romi
 					info.ParseFromString(data);
 					engines_[info.engine_name()] = info;
 				}
-				else if (type == wal_type::e_regist_engine)
+				else if (type == wal_type::e_unregist_engine)
 				{
+
+				}
+				else if(type == wal_type::e_regist_actor)
+				{
+					actor_info info;
+					info.ParseFromString(data);
+					actors_[info.name()] = info;
 				}
 			} while (true);
+		}
+
+		void node::reset()
+		{
+			engines_.clear();
+			actors_.clear();
+			snapshot_info_.Clear();
 		}
 
 	}

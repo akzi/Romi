@@ -506,6 +506,9 @@ namespace romi
 					info.ParseFromString(data);
 					engines_[info.engine_name()] = info;
 				}
+				else if (type == wal_type::e_regist_engine)
+				{
+				}
 			} while (true);
 		}
 
